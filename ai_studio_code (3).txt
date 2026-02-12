@@ -1,0 +1,517 @@
+Uncaught SyntaxError: The requested module '@/hooks/useAppStore' does not provide an export named 'useAppStoreComplete'<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#FFFFFF">
+
+    <TextView
+        android:id="@+id/sampleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="النص واضح بدون خيال"
+        android:textSize="20sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="20dp"/>
+
+    <!-- Slider لتغيير حجم الخط -->
+    <SeekBar
+        android:id="@+id/fontSizeSeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="40"
+        android:progress="20"/>
+
+    <!-- زر لتغيير اللون -->
+    <Button
+        android:id="@+id/changeColorButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="غيّر اللون"/>
+
+    <!-- قائمة اختيار نوع الخط -->
+    <Spinner
+        android:id="@+id/fontSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp
+package com.example.cleartext
+
+import android.graphics.Color
+import android.graphics.Typeface
+import android.os.Bundle
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val textView = findViewById<TextView>(R.id.sampleText)
+        val fontSizeSeekBar = findViewById<SeekBar>(R.id.fontSizeSeekBar)
+        val changeColorButton = findViewById<Button>(R.id.changeColorButton)
+        val fontSpinner = findViewById<Spinner>(R.id.fontSpinner)
+
+        // إعداد النص الأساسي
+        textView.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        textView.typeface = Typeface.SANS_SERIF
+        textView.textSize = 20f
+        textView.setTextColor(Color.BLACK)
+
+        // التحكم في حجم الخط
+        fontSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textView.textSize = progress.toFloat()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // تغيير اللون عند الضغط على الزر
+        var isBlack = true
+        changeColorButton.setOnClickListener {
+            if (isBlack) {
+                textView.setTextColor(Color.BLUE)
+            } else {
+                textView.setTextColor(Color.BLACK)
+            }
+            isBlack = !isBlack
+        }
+
+        // قائمة الخطوط
+        val fonts = arrayOf("Sans Serif", "Serif", "Monospace")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, fonts)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        fontSpinner.adapter = adapter
+
+        fontSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                when (fonts[position]) {
+                    "Sans Serif" -> textView.typeface = Typeface.SANS_SERIF
+                    "Serif" -> textView.typeface = Typeface.SERIF
+                    "Monospace" -> textView.typeface = Typeface.MONOSPACE
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+# ClearText
+
+مشروع مفتوح المصدر لتحسين وضوح النصوص على شاشة الهاتف، بدون ظلال أو تأثيرات غير مرغوبة.
+
+## المميزات
+- إلغاء أي تأثيرات ظل أو ضبابية على النصوص.
+- استخدام خطوط واضحة (Sans Serif, Serif, Monospace).
+- ضبط حجم النصوص والتباين بين النص والخلفية.
+- واجهة إعدادات لتغيير حجم الخط واللون ونوع الخط يدويًا.
+
+## طريقة الاستخدام
+1. افتح التطبيق.
+2. استخدم شريط التحكم (Slider) لتغيير حجم الخط.
+3. اضغط زر "غيّر اللون" لتبديل لون النص.
+4. اختر نوع الخط من القائمة (Sans Serif / Serif / Monospace).
+</LinearLayout><?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#FFFFFF">
+
+    <TextView
+        android:id="@+id/sampleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="النص واضح بدون خيال"
+        android:textSize="20sp"
+        android:textColor="#000000"
+        android:layout_marginBottom="20dp"/>
+
+    <SeekBar
+        android:id="@+id/fontSizeSeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="40"
+        android:progress="20"/>
+
+    <Button
+        android:id="@+id/changeColorButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="غيّر اللون"/>
+
+    <Spinner
+        android:id="@+id/fontSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"/>
+
+    <!-- قائمة اختيار الخلفية -->
+    <Spinner
+        android:id="@+id/backgroundSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"/>
+</LinearLayout># ClearText
+
+مشروع مفتوح المصدر لتحسين وضوح النصوص على شاشة الهاتف، بدون ظلال أو تأثيرات غير مرغوبة.
+
+## المميزات
+- إلغاء أي تأثيرات ظل أو ضبابية على النصوص.
+- استخدام خطوط واضحة (Sans Serif, Serif, Monospace).
+- ضبط حجم النصوص والتباين بين النص والخلفية.
+- واجهة إعدادات لتغيير حجم الخط واللون ونوع الخط.
+- اختيار خلفية الشاشة (أبيض، رمادي، أسود) لراحة العين.
+
+## طريقة الاستخدام
+1. افتح التطبيق.
+2. استخدم شريط التحكم (Slider) لتغيير حجم الخط.
+3. اضغط زر "غيّر اللون" لتبديل لون النص.
+4. اختر نوع الخط من القائمة (Sans Serif / Serif / Monospace).
+5. اختر الخلفية من القائمة (أبيض / رمادي / أسودpackage com.example.cleartext
+
+import android.graphics.Color
+import android.graphics.Typeface
+import android.os.Bundle
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        val textView = findViewById<TextView>(R.id.sampleText)
+        val fontSizeSeekBar = findViewById<SeekBar>(R.id.fontSizeSeekBar)
+        val changeColorButton = findViewById<Button>(R.id.changeColorButton)
+        val fontSpinner = findViewById<Spinner>(R.id.fontSpinner)
+        val backgroundSpinner = findViewById<Spinner>(R.id.backgroundSpinner)
+
+        // إعداد النص الأساسي
+        textView.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+        textView.typeface = Typeface.SANS_SERIF
+        textView.textSize = 20f
+        textView.setTextColor(Color.BLACK)
+
+        // التحكم في حجم الخط
+        fontSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textView.textSize = progress.toFloat()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // تغيير اللون عند الضغط على الزر
+        var isBlack = true
+        changeColorButton.setOnClickListener {
+            if (isBlack) {
+                textView.setTextColor(Color.BLUE)
+            } else {
+                textView.setTextColor(Color.BLACK)
+            }
+            isBlack = !isBlack
+        }
+
+        // قائمة الخطوط
+        val fonts = arrayOf("Sans Serif", "Serif", "Monospace")
+        val adapterFonts = ArrayAdapter(this, android.R.layout.simple_spinner_item, fonts)
+        adapterFonts.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        fontSpinner.adapter = adapterFonts
+
+        fontSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                when (fonts[position]) {
+                    "Sans Serif" -> textView.typeface = Typeface.SANS_SERIF
+                    "Serif" -> textView.typeface = Typeface.SERIF
+                    "Monospace" -> textView.typeface = Typeface.MONOSPACE
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        // قائمة الخلفيات + الوضع الليلي
+        val backgrounds = arrayOf("أبيض", "رمادي", "أسود", "وضع ليلي")
+        val adapterBackgrounds = ArrayAdapter(this, android.R.layout.simple_spinner_item, backgrounds)
+        adapterBackgrounds.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        backgroundSpinner.adapter = adapterBackgrounds
+
+        backgroundSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                when (backgrounds[position]) {
+                    "أبيض" -> {
+                        window.decorView.setBackgroundColor(Color.WHITE)
+                        textView.setTextColor(Color.BLACK)
+                    }
+                    "رمادي" -> {
+                        window.decorView.setBackgroundColor(Color.LTGRAY)
+                        textView.setTextColor(Color.BLACK)
+                    }
+                    "أسود" -> {
+                        window.decorView.setBackgroundColor(Color.BLACK)
+                        textView.setTextColor(Color.WHITE)
+                    }
+                    "وضع ليلي" -> {
+                        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    }
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+package com.example.cleartext
+
+import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.Typeface
+import android.os.Bundle
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var prefs: SharedPreferences
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        prefs = getSharedPreferences("ClearTextPrefs", MODE_PRIVATE)
+
+        val textView = findViewById<TextView>(R.id.sampleText)
+        val fontSizeSeekBar = findViewById<SeekBar>(R.id.fontSizeSeekBar)
+        val changeColorButton = findViewById<Button>(R.id.changeColorButton)
+        val fontSpinner = findViewById<Spinner>(R.id.fontSpinner)
+        val backgroundSpinner = findViewById<Spinner>(R.id.backgroundSpinner)
+
+        // استرجاع الإعدادات المحفوظة
+        val savedSize = prefs.getFloat("fontSize", 20f)
+        val savedColor = prefs.getInt("textColor", Color.BLACK)
+        val savedFont = prefs.getString("fontType", "Sans Serif")
+        val savedBackground = prefs.getString("background", "أبيض")
+
+        textView.textSize = savedSize
+        textView.setTextColor(savedColor)
+        textView.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+
+        when (savedFont) {
+            "Sans Serif" -> textView.typeface = Typeface.SANS_SERIF
+            "Serif" -> textView.typeface = Typeface.SERIF
+            "Monospace" -> textView.typeface = Typeface.MONOSPACE
+        }
+
+        when (savedBackground) {
+            "أبيض" -> window.decorView.setBackgroundColor(Color.WHITE)
+            "رمادي" -> window.decorView.setBackgroundColor(Color.LTGRAY)
+            "أسود" -> {
+                window.decorView.setBackgroundColor(Color.BLACK)
+                textView.setTextColor(Color.WHITE)
+            }
+            "وضع ليلي" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        }
+
+        // التحكم في حجم الخط
+        fontSizeSeekBar.progress = savedSize.toInt()
+        fontSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textView.textSize = progress.toFloat()
+                prefs.edit().putFloat("fontSize", progress.toFloat()).apply()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // تغيير اللون عند الضغط على الزر
+        var isBlack = savedColor == Color.BLACK
+        changeColorButton.setOnClickListener {
+            if (isBlack) {
+                textView.setTextColor(Color.BLUE)
+                prefs.edit().putInt("textColor", Color.BLUE).apply()
+            } else {
+                textView.setTextColor(Color.BLACK)
+                prefs.edit().putInt("textColor", Color.BLACK).apply()
+            }
+            isBlack = !isBlack
+        }
+
+        // قائمة الخطوط
+        val fonts = arrayOf("Sans Serif", "Serif", "Monospace")
+        val adapterFonts = ArrayAdapter(this, android.R.layout.simple_spinner_item, fonts)
+        adapterFonts.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        fontSpinner.adapter = adapterFonts
+        fontSpinner.setSelection(fonts.indexOf(savedFont))
+
+        fontSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                val selectedFont = fonts[position]
+                when (selectedFont) {
+                    "Sans Serif" -> textView.typeface = Typeface.SANS_SERIF
+                    "Serif" -> textView.typeface = Typeface.SERIF
+                    "Monospace" -> textView.typeface = Typeface.MONOSPACE
+                }
+                prefs.edit().putString("fontType", selectedFont).apply()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        // قائمة الخلفيات + الوضع الليلي
+        val backgrounds = arrayOf("أبيض", "رمادي", "أسود", "وضع ليلي")
+        val adapterBackgrounds = ArrayAdapter(this, android.R.layout.simple_spinner_item, backgrounds)
+        adapterBackgrounds.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        backgroundSpinner.adapter = adapterBackgrounds
+        backgroundSpinner.setSelection(backgrounds.indexOf(savedBackground))
+
+        backgroundSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                val selectedBackground = backgrounds[position]
+                when (selectedBackground) {
+                    "أبيض" -> {
+                        window.decorView.setBackgroundColor(Color.WHITE)
+                        textView.setTextColor(Color.BLACK)
+                    }
+                    "رمادي" -> {
+                        window.decorView.setBackgroundColor(Color.LTGRAY)
+                        textView.setTextColor(Color.BLACK)
+                    }
+                    "أسود" -> {
+                        window.decorView.setBackgroundColor(Color.BLACK)
+                        textView.setTextColor(Color.WHITE)
+                    }
+                    "وضع ليلي" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                }
+                prefs.edit().putString("background", selectedBackground).apply()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+}
+    }
+package com.example.cleartext
+
+import android.content.SharedPreferences
+import android.graphics.Color
+import android.graphics.Typeface
+import android.os.Bundle
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var prefs: SharedPreferences
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        prefs = getSharedPreferences("ClearTextPrefs", MODE_PRIVATE)
+
+        val textView = findViewById<TextView>(R.id.sampleText)
+        val fontSizeSeekBar = findViewById<SeekBar>(R.id.fontSizeSeekBar)
+        val changeColorButton = findViewById<Button>(R.id.changeColorButton)
+        val fontSpinner = findViewById<Spinner>(R.id.fontSpinner)
+        val backgroundSpinner = findViewById<Spinner>(R.id.backgroundSpinner)
+
+        // استرجاع الإعدادات المحفوظة
+        val savedSize = prefs.getFloat("fontSize", 20f)
+        val savedColor = prefs.getInt("textColor", Color.BLACK)
+        val savedFont = prefs.getString("fontType", "Sans Serif")
+        val savedBackground = prefs.getString("background", "أبيض")
+
+        textView.textSize = savedSize
+        textView.setTextColor(savedColor)
+        textView.setShadowLayer(0f, 0f, 0f, Color.TRANSPARENT)
+
+        when (savedFont) {
+            "Sans Serif" -> textView.typeface = Typeface.SANS_SERIF
+            "Serif" -> textView.typeface = Typeface.SERIF
+            "Monospace" -> textView.typeface = Typeface.MONOSPACE
+        }
+
+        when (savedBackground) {
+            "أبيض" -> window.decorView.setBackgroundColor(Color.WHITE)
+            "رمادي" -> window.decorView.setBackgroundColor(Color.LTGRAY)
+            "أسود" -> {
+                window.decorView.setBackgroundColor(Color.BLACK)
+                textView.setTextColor(Color.WHITE)
+            }
+            "وضع ليلي" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        }
+
+        // التحكم في حجم الخط
+        fontSizeSeekBar.progress = savedSize.toInt()
+        fontSizeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                textView.textSize = progress.toFloat()
+                prefs.edit().putFloat("fontSize", progress.toFloat()).apply()
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        // تغيير اللون عند الضغط على الزر
+        var isBlack = savedColor == Color.BLACK
+        changeColorButton.setOnClickListener {
+            if (isBlack) {
+                textView.setTextColor(Color.BLUE)
+                prefs.edit().putInt("textColor", Color.BLUE).apply()
+            } else {
+                textView.setTextColor(Color.BLACK)
+                prefs.edit().putInt("textColor", Color.BLACK).apply()
+            }
+            isBlack = !isBlack
+        }
+
+        // قائمة الخطوط
+        val fonts = arrayOf("Sans Serif", "Serif", "Monospace")
+        val adapterFonts = ArrayAdapter(this, android.R.layout.simple_spinner_item, fonts)
+        adapterFonts.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        fontSpinner.adapter = adapterFonts
+        fontSpinner.setSelection(fonts.indexOf(savedFont))
+
+        fontSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                val selectedFont = fonts[position]
+                when (selectedFont) {
+                    "Sans Serif" -> textView.typeface = Typeface.SANS_SERIF
+                    "Serif" -> textView.typeface = Typeface.SERIF
+                    "Monospace" -> textView.typeface = Typeface.MONOSPACE
+                }
+                prefs.edit().putString("fontType", selectedFont).apply()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
+        // قائمة الخلفيات + الوضع الليلي
+        val backgrounds = arrayOf("أبيض", "رمادي", "أسود", "وضع ليلي")
+        val adapterBackgrounds = ArrayAdapter(this, android.R.layout.simple_spinner_item, backgrounds)
+        adapterBackgrounds.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        backgroundSpinner.adapter = adapterBackgrounds
+        backgroundSpinner.setSelection(backgrounds.indexOf(savedBackground))
+
+        backgroundSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: android.view.View?, position: Int, id: Long) {
+                val selectedBackground = backgrounds[position]
+                when (selectedBackground) {
+                    "أبيض" -> {
+                        window.decorView.setBackgroundColor(Color.WHITE)
+                        textView.setTextColor(Color.BLACK)
+                    }
+                    "رمادي" -> {
+                        window.decorView.setBackgroundColor(Color.LTGRAY)
+                        textView.setTextColor(Color.BLACK)
+                    }
+                    "أسود" -> {
+                        window.decorView.setBackgroundColor(Color.BLACK)
+                        textView.setTextColor(Color.WHITE)
+                    }
+                    "وضع ليلي" -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                }
+                prefs.edit().putString("background", selectedBackground).apply()
+            }
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+}

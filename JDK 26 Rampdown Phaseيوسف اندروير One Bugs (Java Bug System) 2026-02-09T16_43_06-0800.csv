@@ -1,0 +1,2017 @@
+Summary;Issue key;Issue id;Issue Type;Status;Project key;Project name;Project type;Project lead;Project description;Project url;Priority;Resolution;Assignee;Reporter;Creator;Created;Updated;Last Viewed;Resolved;Affects Version/s;Affects Version/s;Fix Version/s;Component/s;Due Date;Votes;Labels;Labels;Labels;Labels;Labels;Description;Environment;Watchers;Log Work;Original Estimate;Remaining Estimate;Time Spent;Work Ratio;Σ Original Estimate;Σ Remaining Estimate;Σ Time Spent;Security Level;Inward issue link (Blocks);Outward issue link (Blocks);Outward issue link (CSR);Inward issue link (Causes);Inward issue link (Relates);Inward issue link (Relates);Inward issue link (Relates);Inward issue link (Relates);Inward issue link (Relates);Inward issue link (Relates);Inward issue link (Relates);Outward issue link (Relates);Outward issue link (Relates);Outward issue link (Relates);Outward issue link (Relates);Attachment;Attachment;Attachment;Attachment;Custom field (CPU);Custom field (Epic Link);Custom field (Epic/Theme);Custom field (Flagged);Custom field (Imported);Custom field (Indexed);Custom field (Introduced In Build);Custom field (Introduced In Version);Custom field (OS);Custom field (OS);Custom field (OS);Custom field (OS);Custom field (OS);Custom field (OS);Custom field (OS);Custom field (Oracle BP Candidates);Custom field (Oracle Evaluation);Custom field (Oracle WNF);Custom field (Original story points);Custom field (Parent Link);Custom field (Rank);Custom field (Rank (Obsolete));Custom field (Resolved In Build);Sprint;Custom field (Subcomponent);Custom field (Target end);Custom field (Target start);Custom field (Team);Custom field (Understanding);Custom field (Verification);Custom field (external_bug);Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment;Comment
+Bytecode rewriting causes Java heap corruption on ARM32;JDK-8369969;5173451;Bug;Open;JDK;JDK;software;duke;;;P2;;;shade;shade;2025-10-15 23:50;2025-10-26 11:20;2026-02-09 16:41;;26;;tbd;hotspot;;0;oraclejdk-na;;;;;"Same as JDK-8369506, but for ARM32. We believe that the same issue is present on ARM32.";;;;;;;;;;;;;;;;JDK-8369506;;;;;;;;;;;;;;;arm;;;;;;;;;;;;;;;;;;;;"0|i3do6j:";9223372036854775807;;;runtime;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Improve JMenuItem layout in Windows L&F;JDK-8376828;5182068;Bug;Open;JDK;JDK;software;duke;;;P3;;psadhukhan;aivanov;aivanov;2026-01-30 11:52;2026-02-06 09:46;2026-02-09 16:43;;26;;27;client-libs;;0;regression;sn_212;sn_213;;;"JDK-8348760 added a new column to display a selection mark and icon separately to the menu layout in Windows Look-and-Feel, but the width of the menu wasn't changed. Therefore, there are more things to display in the same amount of space.
+
+The Swing menu layout doesn't match the margins that we see in Windows File Explorer [1]. ""The margin between the check mark / bullet and the icon should be larger.""
+
+If one compares screenshots [2] of menus from File Explorer and Swing, ""there's so much 'air' in File Explorer version of the popup menu."" [3]
+
+The latest issue found in menu rendering was JDK-8374506 where the arrow to indicate submenu was painted over long text. In the code review for JDK-8374506, I raised my concern with the menu layout again [4], and Alex Zuev [~kizune] agreed with me [5].
+
+[1] https://github.com/openjdk/jdk/pull/23324#discussion_r2185359330
+[2] https://github.com/openjdk/jdk/pull/23324#issuecomment-2705406453
+[3] https://github.com/openjdk/jdk/pull/23324#discussion_r2185371866
+[4] https://github.com/openjdk/jdk/pull/29375#pullrequestreview-3713721845
+[5] https://github.com/openjdk/jdk/pull/29375#issuecomment-3818883539";;;;;;;;;;;;;;;JDK-8348760;;;;;;;;JDK-8374506;JDK-8370945;;;;;;;;;;;;;b11;26;windows;;;;;;;;;;;;"0|i3f0o3:";9223372036854775807;;;javax.swing;;;;;;;"2026-01-30 12:10;aivanov;Another problem was reported in JDK-8370945. The space for the rendering an icon is always reserved. As of this moment, JDK-8370945 is closed as Not an Issue.
+
+I suggest we do not add another column unless there are menu items that need to display both a mark (check or bullet) and an icon. This aligns to my suggestion [6] during the code review for JDK-8348760. I elaborated on the switch between one-column layout and two-column layout in this comment [7].
+
+At the same time, Phil's comment [8] suggests the switch to two-column layout should occur if there's at least one menu item that displays a check or a bullet and there's at least one menu item that has an icon. Although this particular comment was to remove the gap (column) reserved to display an icon where no menu items have an icon; therefore, the statement may not apply to a more generic case in in JDK-8370945.
+
+[6] https://github.com/openjdk/jdk/pull/23324#issuecomment-3008593168
+[7] https://github.com/openjdk/jdk/pull/23324#issuecomment-3005416654
+[8] https://github.com/openjdk/jdk/pull/23324#issuecomment-2985729661;;;";;;;;;;;;;;;;;;;;;;;;;
+cmdline encoding challenges on Windows;JDK-8124977;4832508;Bug;Open;JDK;JDK;software;duke;;;P3;;rriggs;kshoop;kshoop;2015-06-17 14:00;2026-01-28 12:46;2026-02-09 16:43;;26;;tbd;core-libs;;0;;;;;;"Motivated by the discussion here:
+  http://stackoverflow.com/questions/11927518/java-unicode-utf-8-and-windows-command-prompt
+
+As well as this code:
+
+=====
+class Main {
+  public static void main(String[] args) throws Exception {
+    for (int i = 0; i < args.length; ++i) {
+      if (i > 0) {
+        System.out.print(' ');
+      }
+      System.out.print(args[i]);
+    }
+    System.out.println();
+  }
+}
+=====
+ 
+Create a batch file with the following text and with UTF-8 encoding without BOM. Now execute the batch file using CLI. ‘f.txt’ does not contain the same characters as the input characters.
+ 
+=========
+chcp 65001
+java Main 﨨狝 﨨狝 > f.txt
+==========
+
+A good start on language issues in the windows console is in this post and elsewhere in this blog: http://www.siao2.com/2010/10/07/10072032.aspx
+
+There are multiple areas involved in this problem.
+
+First is how the command arguments are passed to an app. Powershell appears to pass them differently than cmd.exe. With cmd.exe after calling chcp 65001, I see that the args are kept in wchar_t as ucs2. With powershell [Console].OutputEncoding as 437, 1252 and utf8 they appeared to be in char as utf8 encoding.
+NOTE: Chcp is a commandline tool to call SetConsoleOutputCP(). As far as I can see a process should not call SetConsoleOutputCP
+
+The second is how the command arguments are retrieved by an app
+
+int main(int argc, char**argv)
+vs
+int wmain(int argc, wchar_t**argv)
+vs
+char* GetCommandLineA()
+vs
+wchar_t* GetCommandLineW()
+
+The JDK uses GetCommandLineA and should use GetCommandLineW to support Unicode args. This change should be controlled by the java commandline to ensure compatibility.
+
+Second are the output streams (stdout, stderr) – These are involved when using > or | to put the results in a file and when writing to the console. This turns out to involve complex logic around using WriteConsoleW for console output, WriteFile for > and | with a final fallback to writing ascii in the GetConsoleOutputCP().
+
+Third is getting the consoles to display gyphs for the Unicode characters being tested. The font selected in the cmd and powershell windows must be Lucida Console or Consolas. Also, additional language packs must be installed to get fallback fonts for the characters needed. Finally, using a console app (conemu, Console+, ..) should enable the proper display of Unicode glyphs for cmd and powershell windows that they start. PowerShellISE worked when the [Console].OutputEncoding is set to utf8.
+ ";;;;;;;;;;;;;;;;JDK-4900150;JDK-6727466;JDK-8029584;JDK-6589705;JDK-6584897;JDK-4488646;JDK-8272352;JDK-8368853;JDK-8352906;;;;;;;;;;;;;;;windows;windows_2008;windows_2012;windows_7;windows_8;windows_nt;windows_vista;;;;;;"0|i07mv3:";44529;;;;;;;;;;"2025-10-23 15:16;rriggs;@naoto can you check if this is related/same as JDK-8356781?;;;";"2026-01-28 12:05;naoto;Sorry, I just noticed this as the mention did not work. I think the stdout/err encoding issue is resolved with https://bugs.openjdk.org/browse/JDK-8352906, where the output is now use the correct GetConsoleOutputCP(), but the A/W issue cannot be solved due to vmoptions relying on the platform encoding (https://bugs.openjdk.org/browse/JDK-8368853), unless we introduce a totally new JVM invocation api.;;;";;;;;;;;;;;;;;;;;;;;;
+Test java/foreign/TestHandshake.java crashed with access violation in jdk.internal.misc.Unsafe.getShortUnaligned;JDK-8364167;5166835;Bug;Open;JDK;JDK;software;duke;;;P3;;pminborg;dholmes;dholmes;2025-07-28 00:58;2025-10-30 04:27;2026-02-09 16:43;;26;;27;core-libs;;0;intermittent;tier1;;;;"#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x0000022ace8bace2, pid=27568, tid=80472
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0+9) (build 26-ea+9-870)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (26-ea+9-870, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, windows-amd64)
+# Problematic frame:
+# J 832 c1 jdk.internal.misc.Unsafe.getShortUnaligned(Ljava/lang/Object;JZ)S java.base@26-ea (12 bytes) @ 0x0000022ace8bace2 [0x0000022ace8bac80+0x0000000000000062]
+#
+# Core dump will be written. Default location: C:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\scratch\3\hs_err_pid27568.mdmp
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Dtest.vm.opts=-Xmx768m -XX:MaxRAMPercentage=4.16667 -Dtest.boot.jdk=c:\ade\mesos\work_dir\jib-master\install\jdk\24\36\bundles\windows-x64\jdk-24_windows-x64_bin.zip\jdk-24 -Djava.io.tmpdir=c:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\tmp -XX:+CreateCoredumpOnCrash -ea -esa -Dtest.tool.vm.opts=-J-Xmx768m -J-XX:MaxRAMPercentage=4.16667 -J-Dtest.boot.jdk=c:\ade\mesos\work_dir\jib-master\install\jdk\24\36\bundles\windows-x64\jdk-24_windows-x64_bin.zip\jdk-24 -J-Djava.io.tmpdir=c:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\tmp -J-XX:+CreateCoredumpOnCrash -J-ea -J-esa -Dtest.compiler.opts= -Dtest.java.opts= -Dtest.jdk=c:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\windows-x64.jdk\jdk-26 -Dcompile.jdk=c:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\windows-x64.jdk\jdk-26 -Dtest.timeout.factor=4.0 -Dtest.nativepath=c:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\windows-x64.test\jdk\jtreg\native -Dtest.root=C:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\src.full\open\test\jdk -Dtest.name=java/foreign/TestHandshake.java -Dtest.verbose=Verbose[p=BRIEF,f=FULL,e=FULL,t=true,m=false] -Dtest.file=C:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\src.full\open\test\jdk\java\foreign\TestHandshake.java -Dtest.main.class=TestHandshake -Dtest.src=C:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\src.full\open\test\jdk\java\foreign -Dtest.src.path=C:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\src.full\open\test\jdk\java\foreign -Dtest.classes=C:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\classes\1\java\foreign\TestHandshake.d -Dtest.class.path=C:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\classes\1\java\foreign\TestHandshake.d -Dtest.class.path.prefix=C:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\classes\1\java\foreign\TestHandshake.d;C:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\src.full\open\test\jdk\java\foreign -Dtest.modules=java.base/jdk.internal.vm.annotation java.base/jdk.internal.misc --add-modules=java.base --add-exports=java.base/jdk.internal.vm.annotation=ALL-UNNAMED --add-exports=java.base/jdk.internal.misc=ALL-UNNAMED -Xmx768m -XX:MaxRAMPercentage=4.16667 -Dtest.boot.jdk=c:\ade\mesos\work_dir\jib-master\install\jdk\24\36\bundles\windows-x64\jdk-24_windows-x64_bin.zip\jdk-24 -Djava.io.tmpdir=c:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\tmp -XX:+CreateCoredumpOnCrash -ea -esa -Djava.library.path=c:\ade\mesos\work_dir\jib-master\install\jdk-26+9-870\windows-x64.test\jdk\jtreg\native com.sun.javatest.regtest.agent.MainWrapper C:\sb\prod\1753688431\testoutput\test-support\jtreg_open_test_jdk_tier1_part3\java\foreign\TestHandshake.d\testng.0.jta java/foreign/TestHandshake.java false TestHandshake
+
+Host: AMD EPYC 7J13 64-Core Processor                , 12 cores, 23G,  Windows Server 2019 , 64 bit Build 17763 (10.0.17763.7009)
+Time: Mon Jul 28 08:44:25 2025 /GM elapsed time: 17.014413 seconds (0d 0h 0m 17s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000022ae6b52020):  JavaThread ""pool-31-thread-1""        [_thread_in_Java, id=80472, stack(0x000000cb86600000,0x000000cb86700000) (1024K)]
+
+Stack: [0x000000cb86600000,0x000000cb86700000],  sp=0x000000cb866ff130,  free space=1020k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  0x0000022ace8bace2  (no source info available)
+
+The last pc belongs to nmethod (printed below).
+
+siginfo: EXCEPTION_ACCESS_VIOLATION (0xc0000005), reading address 0x0000022ae689ae06
+
+
+Registers:
+RAX=0x0000022ae2052700, RBX=0x0000000000000000, RCX=0x000000000003b71e, RDX=0x00000000e5010128
+RSP=0x000000cb866ff130, RBP=0x000000cb866ff440, RSI=0x0000000000000000, RDI=0x0000000000000000
+R8 =0x0000000000000000, R9 =0x0000022ae689ae06, R10=0x0000000026496078, R11=0x0000022ace84bd80
+R12=0x0000000000000000, R13=0x000000cb866ff3d0, R14=0x000000cb866ff460, R15=0x0000022ae6b52020
+RIP=0x0000022ace8bace2, EFLAGS=0x0000000000010202
+
+XMM[0]=0x0000000000000000 0x4069000000000000
+XMM[1]=0x0000000000000000 0x40a8000000000000
+XMM[2]=0x0000000000000000 0x3ff0000000000000
+XMM[3]=0x0000000000000000 0x0000000000000000
+XMM[4]=0x0000000000000000 0x0000000000000000
+XMM[5]=0x0000000000000000 0x0000000000000000
+XMM[6]=0x0000000000000000 0x0000000000000000
+XMM[7]=0x0000000000000000 0x0000000000000000
+XMM[8]=0x0000000000000000 0x0000000000000000
+XMM[9]=0x0000000000000000 0x0000000000000000
+XMM[10]=0x0000000000000000 0x0000000000000000
+XMM[11]=0x0000000000000000 0x0000000000000000
+XMM[12]=0x0000000000000000 0x0000000000000000
+XMM[13]=0x0000000000000000 0x0000000000000000
+XMM[14]=0x0000000000000000 0x0000000000000000
+XMM[15]=0x0000000000000000 0x0000000000000000
+  MXCSR=0x00001fa0
+
+
+Register to memory mapping:
+
+RAX=0x0000022ae2052700 is pointing into metadata
+RBX=0x0 is null
+RCX=0x000000000003b71e is an unknown value
+RDX=0x00000000e5010128 is an oop: jdk.internal.misc.Unsafe 
+{0x00000000e5010128} - klass: 'jdk/internal/misc/Unsafe' - flags: 
+
+ - ---- fields (total size 2 words):
+RSP=0x000000cb866ff130 is pointing into the stack for thread: 0x0000022ae6b52020
+RBP=0x000000cb866ff440 is pointing into the stack for thread: 0x0000022ae6b52020
+RSI=0x0 is null
+RDI=0x0 is null
+R8 =0x0 is null
+R9 =0x0000022ae689ae06 points into unknown readable memory: 00 00
+R10={method} {0x0000000026496080} 'getShortUnaligned' '(Ljava/lang/Object;JZ)S' in 'jdk/internal/misc/Unsafe'
+R11=0x0000022ace84bd80 is at entry_point+0 in (nmethod*)0x0000022ace84bc88
+Compiled method (c1) 17210  539       3       java.lang.invoke.VarHandleGuards::guard_LI_I (78 bytes)
+ total in heap  [0x0000022ace84bc88,0x0000022ace84d8c0] = 7224
+ main code      [0x0000022ace84bd80,0x0000022ace84d7e0] = 6752
+ stub code      [0x0000022ace84d7e0,0x0000022ace84d8c0] = 224
+ mutable data [0x0000022ae1b69270,0x0000022ae1b69498] = 552
+ relocation     [0x0000022ae1b69270,0x0000022ae1b69430] = 448
+ metadata       [0x0000022ae1b69430,0x0000022ae1b69498] = 104
+ immutable data [0x0000022ae1b68b70,0x0000022ae1b69268] = 1784
+ dependencies   [0x0000022ae1b68b70,0x0000022ae1b68b98] = 40
+ nul chk table  [0x0000022ae1b68b98,0x0000022ae1b68c28] = 144
+ scopes pcs     [0x0000022ae1b68c28,0x0000022ae1b68f68] = 832
+ scopes data    [0x0000022ae1b68f68,0x0000022ae1b69268] = 768
+R12=0x0 is null
+R13=0x000000cb866ff3d0 is pointing into the stack for thread: 0x0000022ae6b52020
+R14=0x000000cb866ff460 is pointing into the stack for thread: 0x0000022ae6b52020
+R15=0x0000022ae6b52020 is a thread
+
+Top of Stack: (sp=0x000000cb866ff130)
+0x000000cb866ff130:   ffffffffffffffff 0000000026496078   ........x`I&....
+0x000000cb866ff140:   0000022ace84bd80 0000022ae22c4c08   ....*....L,.*...
+0x000000cb866ff150:   00000000000009e0 00000000e7d399f8   ................
+0x000000cb866ff160:   0000022ae22c6fb8 0000000000000000   .o,.*...........
+0x000000cb866ff170:   000000cb866ff1a0 00000000e5010128   ..o.....(.......
+0x000000cb866ff180:   0000022ae22c4c08 00000000e7d399a8   .L,.*...........
+0x000000cb866ff190:   000000000002e642 00000000000000d8   B...............
+0x000000cb866ff1a0:   000000cb866ff440 0000022acea4dcf4   @.o.........*...
+0x000000cb866ff1b0:   ffffffffffffffff 0000022ae22c4c08   .........L,.*...
+0x000000cb866ff1c0:   0000000000000004 0000022ae22c5b60   ........`[,.*...
+0x000000cb866ff1d0:   0000022ae22c7590 00000000e7d39658   .u,.*...X.......
+0x000000cb866ff1e0:   00000000e7d39120 0000022ad5cd900e    ...........*...
+0x000000cb866ff1f0:   000000cb866ff280 0000022ad5cd9060   ..o.....`...*...
+0x000000cb866ff200:   0000022ad5cd9060 0000000000000000   `...*...........
+0x000000cb866ff210:   0000022ae689a802 0000000000000000   ....*...........
+0x000000cb866ff220:   0000000000000000 00000000e7d39120   ........ .......
+0x000000cb866ff230:   0000022ae6b52020 000000cb866ff460     ..*...`.o.....
+0x000000cb866ff240:   000000cb866ff3d0 0000000000000000   ..o.............
+0x000000cb866ff250:   0000022ace84bd80 000000002628fcf0   ....*.....(&....
+0x000000cb866ff260:   0000000000000d6b 00000000e7d399f8   k...............
+0x000000cb866ff270:   00000000dfb00298 0000000000000000   ................
+0x000000cb866ff280:   00000000e7d39120 0000022ace84d314    ...........*...
+0x000000cb866ff290:   0000022ae211c700 00000000e7d399a8   ....*...........
+0x000000cb866ff2a0:   fffffffffffffff2 000000002628fcf0   ..........(&....
+0x000000cb866ff2b0:   000000cb866ff440 0000022ace84d314   @.o.........*...
+0x000000cb866ff2c0:   ffffffffffffffff 000000002628fcf0   ..........(&....
+0x000000cb866ff2d0:   000000cb866ff3f8 000000cb866ff3f8   ..o.......o.....
+0x000000cb866ff2e0:   0000022ad5ce5cf1 0000022ad5cd8808   .\..*.......*...
+0x000000cb866ff2f0:   0000000000000000 0000000000000000   ................
+0x000000cb866ff300:   000000cb866ff440 000000cb866ff3f8   @.o.......o.....
+0x000000cb866ff310:   00000000000000e8 00007ffb80b0630d   .........c......
+0x000000cb866ff320:   0000022ae24c8f50 0000022ae24c8f3a   P.L.*...:.L.*...
+
+Instructions: (pc=0x0000022ace8bace2)
+  0x0000022ace8babe2:   00 00 00 00 00 00 60 42 4c e6 2a 02 00 00 10 6d
+  0x0000022ace8babf2:   34 e6 2a 02 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0000022ace8bac02:   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0000022ace8bac12:   00 00 00 00 00 00 80 ac 8b ce 2a 02 00 00 12 00
+  0x0000022ace8bac22:   20 00 ff ff ff ff a8 00 00 00 00 00 00 00 f0 02
+  0x0000022ace8bac32:   00 00 f0 02 00 00 10 03 00 00 ff ff ff ff 2d 00
+  0x0000022ace8bac42:   00 00 00 00 20 00 10 00 10 00 10 00 00 00 60 00
+  0x0000022ace8bac52:   00 00 a8 00 00 00 68 00 00 00 40 03 00 00 03 01
+  0x0000022ace8bac62:   02 01 01 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0000022ace8bac72:   00 00 00 00 00 00 00 00 00 00 00 00 00 00 66 0f
+  0x0000022ace8bac82:   1f 84 00 00 00 00 00 66 0f 1f 84 00 00 00 00 00
+  0x0000022ace8bac92:   44 8b 52 08 44 3b 50 08 0f 85 40 42 46 07 89 84
+  0x0000022ace8baca2:   24 00 80 ff ff 55 48 83 ec 70 41 81 7f 20 01 00
+  0x0000022ace8bacb2:   00 80 74 05 e8 45 99 44 07 48 b8 00 27 05 e2 2a
+  0x0000022ace8bacc2:   02 00 00 8b b0 90 00 00 00 83 c6 02 89 b0 90 00
+  0x0000022ace8bacd2:   00 00 81 e6 fe 07 00 00 85 f6 0f 84 f0 00 00 00
+=>0x0000022ace8bace2:   43 0f bf 04 08 48 be 00 27 05 e2 2a 02 00 00 48
+  0x0000022ace8bacf2:   83 86 20 01 00 00 01 48 be 88 29 05 e2 2a 02 00
+  0x0000022ace8bad02:   00 8b 9e 90 00 00 00 83 c3 02 89 9e 90 00 00 00
+  0x0000022ace8bad12:   81 e3 fe ff 1f 00 85 db 0f 84 d3 00 00 00 85 ff
+  0x0000022ace8bad22:   48 be 88 29 05 e2 2a 02 00 00 bf d8 00 00 00 75
+  0x0000022ace8bad32:   05 bf e8 00 00 00 48 8b 1c 3e 48 8d 5b 01 48 89
+  0x0000022ace8bad42:   1c 3e 0f 85 15 00 00 00 48 be 88 29 05 e2 2a 02
+  0x0000022ace8bad52:   00 00 ff 86 f8 00 00 00 e9 57 00 00 00 48 be 88
+  0x0000022ace8bad62:   29 05 e2 2a 02 00 00 48 83 86 10 01 00 00 01 48
+  0x0000022ace8bad72:   be f0 2a 05 e2 2a 02 00 00 8b be 90 00 00 00 83
+  0x0000022ace8bad82:   c7 02 89 be 90 00 00 00 81 e7 fe ff 1f 00 85 ff
+  0x0000022ace8bad92:   0f 84 7c 00 00 00 48 8b f0 81 e6 00 ff 00 00 c1
+  0x0000022ace8bada2:   fe 08 c1 e0 08 48 0b f0 0f bf f6 c1 e6 10 c1 fe
+  0x0000022ace8badb2:   10 48 8b c6 c1 e0 10 c1 f8 10 c1 e0 10 c1 f8 10
+  0x0000022ace8badc2:   48 83 c4 70 5d 49 3b 67 28 0f 87 64 00 00 00 c3
+  0x0000022ace8badd2:   49 ba 78 60 49 26 00 00 00 00 4c 89 54 24 08 48
+
+
+Stack slot to memory mapping:
+
+stack at sp + 0 slots: 0xffffffffffffffff is an unknown value
+stack at sp + 1 slots: {method} {0x0000000026496080} 'getShortUnaligned' '(Ljava/lang/Object;JZ)S' in 'jdk/internal/misc/Unsafe'
+stack at sp + 2 slots: 0x0000022ace84bd80 is at entry_point+0 in (nmethod*)0x0000022ace84bc88
+Compiled method (c1) 17216  539       3       java.lang.invoke.VarHandleGuards::guard_LI_I (78 bytes)
+ total in heap  [0x0000022ace84bc88,0x0000022ace84d8c0] = 7224
+ main code      [0x0000022ace84bd80,0x0000022ace84d7e0] = 6752
+ stub code      [0x0000022ace84d7e0,0x0000022ace84d8c0] = 224
+ mutable data [0x0000022ae1b69270,0x0000022ae1b69498] = 552
+ relocation     [0x0000022ae1b69270,0x0000022ae1b69430] = 448
+ metadata       [0x0000022ae1b69430,0x0000022ae1b69498] = 104
+ immutable data [0x0000022ae1b68b70,0x0000022ae1b69268] = 1784
+ dependencies   [0x0000022ae1b68b70,0x0000022ae1b68b98] = 40
+ nul chk table  [0x0000022ae1b68b98,0x0000022ae1b68c28] = 144
+ scopes pcs     [0x0000022ae1b68c28,0x0000022ae1b68f68] = 832
+ scopes data    [0x0000022ae1b68f68,0x0000022ae1b69268] = 768
+stack at sp + 3 slots: {method} {0x0000022ae22c4c10} 'get' '(Ljava/lang/invoke/VarHandle;Ljava/lang/Object;I)S' in 'java/lang/invoke/VarHandleByteArrayAsShorts$ByteBufferHandle'
+stack at sp + 4 slots: 0x00000000000009e0 is an unknown value
+stack at sp + 5 slots: 0x00000000e7d399f8 is an oop: java.nio.DirectByteBuffer 
+{0x00000000e7d399f8} - klass: 'java/nio/DirectByteBuffer' - flags: 
+
+ - ---- fields (total size 8 words):
+ - private 'mark' 'I' @12  -1 (0xffffffff)
+ - 'address' 'J' @16  2383279660752 (0x0000022ae6899ed0)
+ - private 'position' 'I' @24  0 (0x00000000)
+ - private 'limit' 'I' @28  1000000 (0x000f4240)
+ - private final 'capacity' 'I' @32  1000000 (0x000f4240)
+ - final 'segment' 'Ljava/lang/foreign/MemorySegment;' @36  a 'jdk/internal/foreign/NativeMemorySegmentImpl'{0x00000000e7d39198} (0xe7d39198)
+ - final 'hb' '[B' @40  null (0x00000000)
+ - final 'offset' 'I' @44  0 (0x00000000)
+ - 'isReadOnly' 'Z' @48  false (0x00)
+ - 'bigEndian' 'Z' @49  true (0x01)
+ - 'nativeByteOrder' 'Z' @50  false (0x00)
+ - private final 'isSync' 'Z' @51  false (0x00)
+ - private final 'fd' 'Ljava/io/FileDescriptor;' @52  null (0x00000000)
+ - private final 'att' 'Ljava/lang/Object;' @56  null (0x00000000)
+ - private final 'cleaner' 'Lsun/nio/Cleaner;' @60  null (0x00000000)
+stack at sp + 6 slots: 0x0000022ae22c6fb8 is pointing into metadata
+stack at sp + 7 slots: 0x0 is null
+
+Lock stack of current Java thread (top to bottom):
+
+
+Compiled method (c1) 17219  832       3       jdk.internal.misc.Unsafe::getShortUnaligned (12 bytes)
+ total in heap  [0x0000022ace8bab88,0x0000022ace8baeb0] = 808
+ main code      [0x0000022ace8bac80,0x0000022ace8bae78] = 504
+ stub code      [0x0000022ace8bae78,0x0000022ace8baeb0] = 56
+ mutable data [0x0000022ae1b734c0,0x0000022ae1b73520] = 96
+ relocation     [0x0000022ae1b734c0,0x0000022ae1b73500] = 64
+ metadata       [0x0000022ae1b73500,0x0000022ae1b73520] = 32
+ immutable data [0x0000022ae64c4260,0x0000022ae64c4308] = 168
+ dependencies   [0x0000022ae64c4260,0x0000022ae64c4270] = 16
+ scopes pcs     [0x0000022ae64c4270,0x0000022ae64c42c0] = 80
+ scopes data    [0x0000022ae64c42c0,0x0000022ae64c4308] = 72
+
+Something messed up the stack trace.";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3cjwb:";9223372036854775807;;;java.lang.foreign;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+HttpClient may end up waiting forever for a HTTP/2 connection to complete if a HTTP/3 connection fails and the target server doesn't support TLS over TCP;JDK-8371413;5175322;Bug;Open;JDK;JDK;software;duke;;;P3;;jpai;dfuchs;dfuchs;2025-11-06 07:26;2026-01-30 02:26;2026-02-09 16:43;;26;;tbd;core-libs;;0;http3;httpclient;;;;"This was reported on net-dev:
+https://mail.openjdk.org/pipermail/net-dev/2025-November/028874.html
+
+>  I've been testing the Http3 support on windows 11 with build 26-ea+22-2263, and my request was seemingly just timing out. 
+>
+> After like 3 hours of fiddling, I realized that I forgot to import the mkcert  rootCA  I was using into the jdk cacerts. 
+> 
+> Long story short, when I ran  `keytool -import -trustcacerts -noprompt   -alias mkcert-root-ca   -file ""$(mkcert -CAROOT)/rootCA.pem""   -keystore ""$JAVA_HOME/lib/security/cacerts""   -storepass changeit` then it suddenly began to work.
+> 
+> Perchance is it possible to get a clearer error message?
+
+";;;;;;;;;;;;;;;;JDK-8373677;;;;;;;;;;;"2025-11-07 04:14;dfuchs;UntrustedHttp3.java;https://bugs.openjdk.org/secure/attachment/117046/UntrustedHttp3.java";;;;;;;;;;;;;;;;;;;;;;;;"0|i3dylf:";9223372036854775807;;;java.net;;;;;;;"2025-11-06 09:05;dfuchs;here are logs:
+
+WARNING: Unknown module: io.avaje.jex.test specified to --add-reads
+Nov 06, 2025 11:37:03 AM io.avaje.jex.core.BootstrapServer start
+INFO: Avaje Jex started class io.avaje.jex.http3.flupke.impl.FlupkeHttpServer in 194ms on https://0:0:0:0:0:0:0:0:8080
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.Http3ClientImpl getConnectionFor
+INFO: HTTP3: getConnectionFor exchange https://localhost:8080 GET #1
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.Http3ClientImpl getConnectionFor
+INFO: HTTP3: Creating connection for Exchange https://localhost:8080 GET #1
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.HttpQuicConnection logAltSvcFor
+INFO: ALTSVC: No AltService found for localhost:8080
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.QuicClient chooseEndpoint
+INFO: QUIC: Adding new endpoint: QuicEndpoint(HttpClientImpl(1)-0)
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.QuicEndpoint lambda$create$1
+INFO: QUIC: Initial receive buffer size is: 65536
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.QuicEndpoint lambda$create$1
+INFO: QUIC: Initial send buffer size is: 65536
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.Http3Connection createAsync
+INFO: HTTP3: Http3Connection.createAsync: Got HttpQuicConnection for https://localhost:8080 GET #1 is: quic:1
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.QuicConnectionImpl startInitialTimer
+INFO: QUIC: QuicClientConnection(1): Arming quic initial timer for PT29.9998017S
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.QuicConnectionImpl sendFirstInitialPacket
+INFO: QUIC: QuicClientConnection(1): connectionId: a2185e4ac3afe4deda4fc7dc14, QuicEndpoint(HttpClientImpl(1)-0): QuicEndpoint(HttpClientImpl(1)-0) - /[0:0:0:0:0:0:0:0]:50781
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.IdleTimeoutManager checkUpdateIdleTimeout
+INFO: QUIC: QuicClientConnection(1) idle connection timeout updated to 30,000 milli seconds
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.PacketSpaceManager$PacketTransmissionTask logNoDeadline
+INFO: QUIC: QuicClientConnection(1): INITIAL no deadline, task unscheduled
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.PacketSpaceManager close
+INFO: QUIC: QuicClientConnection(1) closing packet space INITIAL
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.ConnectionTerminatorImpl immediateClose
+INFO: QUIC: QuicClientConnection(1) entering closing state, code 0x12e - jdk.internal.net.quic.QuicTransportException: certificate_unknown
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.QuicConnectionImpl pushDatagram
+INFO: QUIC: QuicClientConnection(1) OUT: HANDSHAKE(pn:2, size=70, frames:[ConnectionCloseFrame[type=0x1c, errorCode=0x12e, tlsAlertDescription=46, errorFrameType=0x0, reason=certificate_unknown]])
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.PacketSpaceManager close
+INFO: QUIC: QuicClientConnection(1) closing packet space HANDSHAKE
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.PacketSpaceManager close
+INFO: QUIC: QuicClientConnection(1) closing packet space APPLICATION
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.Http3ClientImpl connectionCompleted
+INFO: HTTP3: Checking waiters on completed connection null to https:localhost:8080 created for https://localhost:8080 GET #1
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.PacketSpaceManager$PacketTransmissionTask logNoDeadline
+INFO: QUIC: QuicClientConnection(1): HANDSHAKE no deadline, task unscheduled
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.PacketSpaceManager$PacketTransmissionTask logNoDeadline
+INFO: QUIC: QuicClientConnection(1): APPLICATION no deadline, task unscheduled
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.quic.ConnectionTerminatorImpl immediateClose
+INFO: QUIC: QuicClientConnection(1) connection has now transitioned to closing state
+Nov 06, 2025 11:37:04 AM jdk.internal.net.http.Http3ClientImpl connectionCompleted0
+INFO: HTTP3: No HTTP/3 connection created for requests to https:localhost:8080, will fail or downgrade: waiters[0](completed:0, retried:0, errors:0) - originally created for https://localhost:8080 GET #1
+;;;";"2025-11-07 04:23;dfuchs;The issue happens when there's a clear-only HTTP server that listens at the same port than the quic server, and that does not support TLS/https.
+
+In that case, when the client falls back to TCP, the server consumes the client hello and goes on waiting for the \r\n termination of the request line.
+
+Since that never comes, the server doesn't reply anything, and if no timeout is configured,  the client waits for the server hello forever. 
+
+The workaround in such case would be to configure the request with setOption(H3_DISCOVERY, HTTP_3_URI_ONLY) to prevent the fallback to TCP/TLS
+
+One problem here is that the exception (untrusted_certificate) that makes the quic connection fail is not logged in the high-level HttpClient log even if `errors` are enabled,
+
+A possible mitigation could also be not to fallback to TCP if the exception that is raised is caused by a TLS error,
+
+;;;";"2026-01-30 02:23;dfuchs;The issue has been fixed in our jdk.httpserver (JDK 27), on the server side, by detecting that a TLS handshake is being received on a clear connection; see JDK-8373677. 
+Ideally we should also set a timer on the client side when falling back to TCP/TLS, and fail the connection attempt if the TCP server endpoint doesn't respond in a reasonable time. The failed attempt in case of timeout for the TCP/TLS handshake should report the exception of the QUIC connection.  It is this part - additional fallback timeout + reporting meaningful exception if the timeout is raised, that remains to be implemented.;;;";;;;;;;;;;;;;;;;;;;;
+C2: transformation to counted loop in Stemmer.java fails with StressIncrementalInlining;JDK-8375639;5180642;Bug;Open;JDK;JDK;software;duke;;;P3;;;mchevalier;mchevalier;2026-01-19 06:32;2026-01-19 23:54;2026-02-09 16:43;;26;;27;hotspot;;0;c2;oracle-triage-27;;;;"'jtreg' '-va' '-s' '-jdk:.../jdk/build/linux-x64-debug/jdk' '-vmoptions:-XX:StressLongCountedLoop=2000000 -XX:+UnlockDiagnosticVMOptions -XX:+StressIncrementalInlining' 'test/hotspot/jtreg/compiler/c2/stemmer/Stemmer.java'
+
+
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (.../src/hotspot/share/opto/loopnode.cpp:4562), pid=2377232, tid=2377250
+#  assert(!_head->is_Loop() || !_head->as_Loop()->is_loop_nest_inner_loop()) failed: transformation to counted loop should not fail
+#
+# JRE version: Java(TM) SE Runtime Environment (27.0) (fastdebug build 27-internal-mchevali.open)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (fastdebug 27-internal-mchevali.open, mixed mode, tiered, compressed oops, compressed class ptrs, g1 gc, linux-amd64)
+# Problematic frame:
+# V  [libjvm.so+0x15b846a]  IdealLoopTree::counted_loop(PhaseIdealLoop*)+0x2aa
+
+
+Current CompileTask:
+C2:1160  682    b  4       compiler.c2.stemmer.Stemmer::stem (58 bytes)
+
+Stack: [0x00007fefb1f00000,0x00007fefb2000000],  sp=0x00007fefb1ffab40,  free space=1002k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0x15b846a]  IdealLoopTree::counted_loop(PhaseIdealLoop*)+0x2aa  (loopnode.cpp:4562)
+V  [libjvm.so+0x15b827a]  IdealLoopTree::counted_loop(PhaseIdealLoop*)+0xba  (loopnode.cpp:4573)
+V  [libjvm.so+0x15bd047]  PhaseIdealLoop::build_and_optimize()+0xaf7  (loopnode.cpp:5139)
+V  [libjvm.so+0xbb8db0]  PhaseIdealLoop::optimize(PhaseIterGVN&, LoopOptsMode)+0x4c0  (loopnode.hpp:1233)
+V  [libjvm.so+0xbafd21]  Compile::optimize_loops(PhaseIterGVN&, LoopOptsMode)+0xb1  (compile.cpp:2268)
+V  [libjvm.so+0xbb2c4f]  Compile::Optimize()+0xcbf  (compile.cpp:2517)
+V  [libjvm.so+0xbb5df3]  Compile::Compile(ciEnv*, ciMethod*, int, Options, DirectiveSet*)+0x2023  (compile.cpp:862)
+V  [libjvm.so+0x9ccc68]  C2Compiler::compile_method(ciEnv*, ciMethod*, int, bool, DirectiveSet*)+0x498  (c2compiler.cpp:147)
+V  [libjvm.so+0xbc52e0]  CompileBroker::invoke_compiler_on_method(CompileTask*)+0x780  (compileBroker.cpp:2345)
+V  [libjvm.so+0xbc6b40]  CompileBroker::compiler_thread_loop()+0x530  (compileBroker.cpp:1989)
+V  [libjvm.so+0x1125d9b]  JavaThread::thread_main_inner()+0x13b  (javaThread.cpp:776)
+V  [libjvm.so+0x1bb42b6]  Thread::call_run()+0xb6  (thread.cpp:242)
+V  [libjvm.so+0x1808f38]  thread_native_entry(Thread*)+0x118  (os_linux.cpp:860)
+
+";;;;;;;;;;;;;;;;JDK-8319879;;;;;;;JDK-8356176;;;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3esdv:";9223372036854775807;;;compiler;;;;;;;"2026-01-19 06:59;chagedorn;ILW = Assertion failure when trying to convert a loop to a counted loop, single test and only with StressIncrementalInline, disable compilation of affected method = HLM = P3;;;";"2026-01-19 23:54;chagedorn;Starts to fail after JDK-8356176 which is probably just a side effect since we only changed the split through phi policy.;;;";;;;;;;;;;;;;;;;;;;;;
+"C2 compilation asserts with ""slice of address and input slice don't match""";JDK-8374783;5179627;Bug;Open;JDK;JDK;software;duke;;;P3;;;thartmann;thartmann;2026-01-08 02:04;2026-02-02 07:05;2026-02-09 16:43;;26;;27;hotspot;;0;c2;ctw;intermittent;oracle-triage-27;tier2;"# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (workspace/open/src/hotspot/share/opto/parse3.cpp:133), pid=1484353, tid=1484371
+#  assert(C->get_alias_index(adr_type) == C->get_alias_index(_gvn.type(adr)->isa_ptr())) failed: slice of address and input slice don't match
+#
+# JRE version: Java(TM) SE Runtime Environment (27.0+4) (fastdebug build 27-ea+4-323)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (fastdebug 27-ea+4-323, mixed mode, sharing, compressed oops, compressed class ptrs, g1 gc, linux-aarch64)
+# Problematic frame:
+# V  [libjvm.so+0x15c27c8]  Parse::do_get_xxx(Node*, ciField*, bool)+0x4fc
+#
+
+Current CompileTask:
+C2:31838 3728    b        jdk.jpackage.internal.cli.StandardHelpFormatter$1::compare (52 bytes)
+
+Stack: [0x0000ffff59bf4000,0x0000ffff59df2000],  sp=0x0000ffff59dec0e0,  free space=2016k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0x15c27c8]  Parse::do_get_xxx(Node*, ciField*, bool)+0x4fc  (parse3.cpp:133)
+V  [libjvm.so+0x15c40e0]  Parse::do_field_access(bool, bool)+0x610  (parse3.cpp:90)
+V  [libjvm.so+0x15bff40]  Parse::do_one_bytecode()+0x2dc0  (parse.hpp:535)
+V  [libjvm.so+0x15ab1e8]  Parse::do_one_block()+0x224  (parse1.cpp:1593)
+V  [libjvm.so+0x15ac5ac]  Parse::do_all_blocks()+0x13c  (parse1.cpp:724)
+V  [libjvm.so+0x15af9a4]  Parse::Parse(JVMState*, ciMethod*, float)+0x9e0  (parse1.cpp:628)
+V  [libjvm.so+0x817ff8]  ParseGenerator::generate(JVMState*)+0xe8  (callGenerator.cpp:97)
+V  [libjvm.so+0x81c25c]  PredictedCallGenerator::generate(JVMState*)+0x3dc  (callGenerator.cpp:914)
+V  [libjvm.so+0x81e158]  CallGenerator::do_late_inline_helper()+0x8d8  (callGenerator.cpp:675)
+V  [libjvm.so+0x9e824c]  Compile::inline_incrementally_one()+0x19c  (compile.cpp:2119)
+V  [libjvm.so+0x9e9748]  Compile::inline_incrementally(PhaseIterGVN&)+0x368  (compile.cpp:2212)
+V  [libjvm.so+0x9eb7e4]  Compile::Optimize()+0x364  (compile.cpp:2344)
+V  [libjvm.so+0x9ee4cc]  Compile::Compile(ciEnv*, ciMethod*, int, Options, DirectiveSet*)+0x16a0  (compile.cpp:862)
+V  [libjvm.so+0x815978]  C2Compiler::compile_method(ciEnv*, ciMethod*, int, bool, DirectiveSet*)+0x2d4  (c2compiler.cpp:147)
+V  [libjvm.so+0x9fd24c]  CompileBroker::invoke_compiler_on_method(CompileTask*)+0xb08  (compileBroker.cpp:2345)
+V  [libjvm.so+0x9fe178]  CompileBroker::compiler_thread_loop()+0x638  (compileBroker.cpp:1989)
+V  [libjvm.so+0xf08488]  JavaThread::thread_main_inner()+0x108  (javaThread.cpp:776)
+V  [libjvm.so+0x1890c2c]  Thread::call_run()+0xac  (thread.cpp:242)
+V  [libjvm.so+0x155ebbc]  thread_native_entry(Thread*)+0x11c  (os_linux.cpp:860)
+C  [libc.so.6+0x80b50]  start_thread+0x300";;;;;;;;;;;;;;;;;;;;;;;JDK-8341411;;;;"2026-01-08 02:05;thartmann;hs_err_modules_jdk_jpackage_0_1484353.log;https://bugs.openjdk.org/secure/attachment/118123/hs_err_modules_jdk_jpackage_0_1484353.log";"2026-01-08 02:05;thartmann;replay_modules_jdk_jpackage_0_1484353.log;https://bugs.openjdk.org/secure/attachment/118124/replay_modules_jdk_jpackage_0_1484353.log";;;;;;;;;;;;;;;;;;;;;;;"0|i3em8z:";9223372036854775807;;;compiler;;;;;;;"2026-01-08 02:15;thartmann;Assert was added by JDK-8341411 a while ago. Replay compilation does not reproduce the issue for me (on Linux x64).;;;";"2026-01-08 05:56;thartmann;This only showed up once on Nov 28th 2025 in a personal run and once on Jan 8th 2026. I was not able to reproduce it, even when hardcoding the StressSeed used by CTW.
+
+ILW = Assert during C2 compilation, intermittent with CTW and stress flags; low frequency, no known workaround but disable compilation of affected method = HLM = P3;;;";;;;;;;;;;;;;;;;;;;;;
+C1: assert(oopDesc::is_oop(loader)) failed: loader must be oop;JDK-8364721;5167506;Bug;Open;JDK;JDK;software;duke;;;P3;;;davleopo;davleopo;2025-08-05 02:30;2025-08-29 03:56;2026-02-09 16:43;;26;;tbd;hotspot;;0;c1;intermittent;oracle-triage-26;;;"Failed test: javax/management/mxbean/MXBeanNotifTest.java
+Additional args: -XX:+UseZGC -XX:+UnlockExperimentalVMOptions -XX:+UseGraalJIT
+
+...
+#  Internal Error (..src/hotspot/share/classfile/javaClasses.cpp:4781)...
+#  assert(oopDesc::is_oop(loader)) failed: loader must be oop
+
+...
+Current CompileTask:
+C1:6604 2473       3       com.sun.tools.javac.jvm.Code::emitop0 (2595 bytes)
+
+Stack: [0x0000ffff71b28000,0x0000ffff71d26000],  sp=0x0000ffff71d22f10,  free space=2027k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0xe7b848]  java_lang_ClassLoader::loader_data_acquire(oop)+0x188  (javaClasses.cpp:4781)
+V  [libjvm.so+0x17babb4]  SystemDictionary::find_instance_klass(Thread*, Symbol*, Handle)+0x74  (classLoaderData.inline.hpp:79)
+V  [libjvm.so+0x17bc040]  SystemDictionary::find_constrained_instance_or_array_klass(Thread*, Symbol*, Handle)+0x20  (systemDictionary.cpp:1680)
+V  [libjvm.so+0x83e1b0]  ciEnv::get_klass_by_name_impl(ciKlass*, constantPoolHandle const&, ciSymbol*, bool)+0x3d0  (ciEnv.cpp:470)
+V  [libjvm.so+0x83df24]  ciEnv::get_klass_by_name_impl(ciKlass*, constantPoolHandle const&, ciSymbol*, bool)+0x144  (ciEnv.cpp:452)
+V  [libjvm.so+0x83e63c]  ciEnv::get_klass_by_index_impl(constantPoolHandle const&, int, bool&, ciInstanceKlass*)+0xdc  (ciEnv.cpp:556)
+V  [libjvm.so+0x84a084]  ciField::ciField(ciInstanceKlass*, int, Bytecodes::Code)+0x2a4  (ciField.cpp:100)
+V  [libjvm.so+0x83d4ec]  ciEnv::get_field_by_index_impl(ciInstanceKlass*, int, Bytecodes::Code)+0xbc  (ciEnv.cpp:755)
+V  [libjvm.so+0x83f3c8]  ciEnv::get_field_by_index(ciInstanceKlass*, int, Bytecodes::Code)+0xa0  (ciEnv.cpp:768)
+V  [libjvm.so+0x8a2fd4]  ciBytecodeStream::get_field(bool&)+0x68  (ciStreams.cpp:310)
+V  [libjvm.so+0x6ca098]  GraphBuilder::access_field(Bytecodes::Code)+0x38  (c1_GraphBuilder.cpp:1704)
+V  [libjvm.so+0x6cf344]  GraphBuilder::iterate_bytecodes_for_block(int)+0xba4  (c1_GraphBuilder.cpp:2931)
+V  [libjvm.so+0x6d26c8]  GraphBuilder::iterate_all_blocks(bool)+0x88  (c1_GraphBuilder.cpp:3019)
+V  [libjvm.so+0x6d3f64]  GraphBuilder::GraphBuilder(Compilation*, IRScope*)+0x7e4  (c1_GraphBuilder.cpp:3390)
+V  [libjvm.so+0x6e333c]  IRScope::IRScope(Compilation*, IRScope*, int, ciMethod*, int, bool)+0x37c  (c1_IR.cpp:127)
+V  [libjvm.so+0x6e3528]  IR::IR(Compilation*, ciMethod*, int)+0xa8  (c1_IR.cpp:273)
+V  [libjvm.so+0x6ab514]  Compilation::build_hir() [clone .part.0]+0x16c  (c1_Compilation.cpp:158)
+V  [libjvm.so+0x6ad330]  Compilation::compile_java_method()+0x46c  (c1_Compilation.cpp:380)
+V  [libjvm.so+0x6ad974]  Compilation::compile_method()+0x224  (c1_Compilation.cpp:479)
+V  [libjvm.so+0x6adf74]  Compilation::Compilation(AbstractCompiler*, ciEnv*, ciMethod*, int, BufferBlob*, bool, DirectiveSet*)+0x2ac  (c1_Compilation.cpp:609)
+V  [libjvm.so+0x6afe60]  Compiler::compile_method(ciEnv*, ciMethod*, int, bool, DirectiveSet*)+0x15c  (c1_Compiler.cpp:262)
+V  [libjvm.so+0x993d78]  CompileBroker::invoke_compiler_on_method(CompileTask*)+0x9d4  (compileBroker.cpp:2325)
+V  [libjvm.so+0x994c38]  CompileBroker::compiler_thread_loop()+0x638  (compileBroker.cpp:1969)
+V  [libjvm.so+0xe9ed08]  JavaThread::thread_main_inner()+0x108  (javaThread.cpp:773)
+V  [libjvm.so+0x181592c]  Thread::call_run()+0xac  (thread.cpp:243)
+V  [libjvm.so+0x14f621c]  thread_native_entry(Thread*)+0x12c  (os_linux.cpp:868)
+C  [libpthread.so.0+0x7950]  start_thread+0x190";;;;;;;;;;;;;;;;;;;;;;;;;;;"2025-08-06 23:43;chagedorn;hs_err_pid1159479.log;https://bugs.openjdk.org/secure/attachment/115725/hs_err_pid1159479.log";"2025-08-06 23:44;chagedorn;replay_pid1159479.log;https://bugs.openjdk.org/secure/attachment/115726/replay_pid1159479.log";;;;;;;;;;;;;;;;;;;;;;;"0|i3co1f:";9223372036854775807;;;compiler;;;;;;;"2025-08-29 03:56;thartmann;I think this is another instance of JDK-8366218.;;;";;;;;;;;;;;;;;;;;;;;;;
+C1 compiler thread crash;JDK-8365840;5168706;Bug;Open;JDK;JDK;software;duke;;;P3;;;djelinski;djelinski;2025-08-19 23:21;2025-08-29 01:06;2026-02-09 16:43;;26;;tbd;hotspot;;0;c1;intermittent;oracle-triage-26;;;"Seen in a personal CI job, test: java/net/httpclient/CancelledResponse2.java
+
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x0000ffff785c9228, pid=1614625, tid=1614664
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0) (build 26-internal-2025-08-19-1556140.daniel.jelinski.jdk-sandbox)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (26-internal-2025-08-19-1556140.daniel.jelinski.jdk-sandbox, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, linux-aarch64)
+# Problematic frame:
+# C  0x0000ffff785c9228
+
+-----
+
+Host: AArch64, 16 cores, 31G, Oracle Linux Server release 8.10
+Time: Tue Aug 19 18:22:45 2025 UTC elapsed time: 1.422081 seconds (0d 0h 0m 1s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000ffff3c086c90):  JavaThread ""C1 CompilerThread1"" daemon [_thread_in_vm, id=1614664, stack(0x0000ffff4b805000,0x0000ffff4ba03000) (2040K)]
+
+
+Current CompileTask:
+C1:1422 2342       3       sun.security.util.DerInputStream::getOID (8 bytes)
+
+Stack: [0x0000ffff4b805000,0x0000ffff4ba03000],  sp=0x0000ffff4ba003b0,  free space=2028k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  0x0000ffff785c9228
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 2 (SEGV_ACCERR), si_addr: 0x0000ffff785c9228
+
+could be related to JDK-8364968 (linux-aarch64, similar thread, similar crash)";;;;;;;;;;;;;;;;;;;;;;;;;;;"2025-08-22 07:23;chagedorn;hs_err_pid1614625.log;https://bugs.openjdk.org/secure/attachment/115909/hs_err_pid1614625.log";"2025-08-22 07:28;chagedorn;replay_pid1614625.log;https://bugs.openjdk.org/secure/attachment/115910/replay_pid1614625.log";;;aarch64;;;;;;;;;;;;;;;;;;;;"0|i3cvfv:";9223372036854775807;;;compiler;;;;;;;"2025-08-22 07:28;chagedorn;ILW = Crash during C1 compilation, single occurrence, disable compilation of affected method = HLM = P3;;;";"2025-08-24 14:55;dholmes;Here is another stranmge C1 crash with no stack etc.
+
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x0000ffffa8282ab0, pid=2508924, tid=2508941
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0+13) (fastdebug build 26-ea+13-1284)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (fastdebug 26-ea+13-1284, mixed mode, tiered, compressed oops, compressed class ptrs, g1 gc, linux-aarch64)
+# Problematic frame:
+# C  0x0000ffffa8282ab0
+#
+# Core dump will be written. Default location: Core dumps may be processed with ""/opt/core.sh %p"" (or dumping to /opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221143/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/05659dca-b229-430c-85a8-a51de6b00ee1/runs/eb3610b4-3d02-486d-b678-2c20f63d6fee/testoutput/test-support/jtreg_open_test_jdk_jdk_util/scratch/5/core.2508924)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Xmx768m -XX:MaxRAMPercentage=3.125 -Dtest.boot.jdk=/opt/mach5/mesos/work_dir/jib-master/install/jdk/24/36/bundles/linux-aarch64/jdk-24_linux-aarch64_bin.tar.gz/jdk-24 -Djava.io.tmpdir=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221143/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/05659dca-b229-430c-85a8-a51de6b00ee1/runs/eb3610b4-3d02-486d-b678-2c20f63d6fee/testoutput/test-support/jtreg_open_test_jdk_jdk_util/tmp -ea -esa --patch-module=java.base=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221143/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/05659dca-b229-430c-85a8-a51de6b00ee1/runs/eb3610b4-3d02-486d-b678-2c20f63d6fee/testoutput/test-support/jtreg_open_test_jdk_jdk_util/patches/java.base -Djava.security.policy=file:/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221143/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/05659dca-b229-430c-85a8-a51de6b00ee1/runs/eb3610b4-3d02-486d-b678-2c20f63d6fee/./testoutput/test-support/jtreg_open_test_jdk_jdk_util/jtreg.policy com.sun.javatest.regtest.agent.AgentServer -id 325 -logfile /opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221143/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/05659dca-b229-430c-85a8-a51de6b00ee1/runs/eb3610b4-3d02-486d-b678-2c20f63d6fee/testoutput/test-support/jtreg_open_test_jdk_jdk_util/jtData/agentServer.325.trace -allowSetSecurityManager -port 38817 -timeoutFactor 10.0
+
+Host: AArch64, 16 cores, 31G, Oracle Linux Server release 8.10
+Time: Sun Aug 24 13:03:18 2025 UTC elapsed time: 7.350518 seconds (0d 0h 0m 7s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000ffffa8282ab0):  JavaThread ""C1 CompilerThread0"" daemon [_thread_in_vm, id=2508941, stack(0x0000ffff81407000,0x0000ffff81605000) (2040K)]
+
+
+Current CompileTask:
+C1:7350 2511       3       com.sun.tools.javac.comp.Resolve::notOverriddenIn (124 bytes)
+
+Stack: [0x0000ffff81407000,0x0000ffff81605000],  sp=0x0000ffff81601360,  free space=2024k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  0x0000ffffa8282ab0
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 2 (SEGV_ACCERR), si_addr: 0x0000ffffa8282ab0;;;";;;;;;;;;;;;;;;;;;;;;
+Test runtime/cds/appcds/dynamicArchive/LambdaForClassInBaseArchive.java crashed in C2;JDK-8365639;5168500;Bug;Open;JDK;JDK;software;duke;;;P3;;;dholmes;dholmes;2025-08-17 15:10;2025-08-29 01:08;2026-02-09 16:43;;26;;tbd;hotspot;;0;c2;intermittent;oracle-triage-26;tier7;;"#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x0000ffff8be13a68, pid=3392147, tid=3392161
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0+12) (fastdebug build 26-ea+12-1195)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (fastdebug 26-ea+12-1195, compiled mode, tiered, compressed oops, compressed class ptrs, g1 gc, linux-aarch64)
+# Problematic frame:
+# V  [libjvm.so+0x2022a68]
+#
+# Core dump will be written. Default location: Core dumps may be processed with ""/opt/core.sh %p"" (or dumping to /opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221103/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/31028373-98f4-4dc1-acbb-31b679101489/runs/08591023-258f-449b-9986-67efeceae0ca/testoutput/test-support/jtreg_open_test_hotspot_jtreg_hotspot_tier2_runtime/scratch/4/core.3392147)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -XX:MaxRAMPercentage=3.125 -Dtest.boot.jdk=/opt/mach5/mesos/work_dir/jib-master/install/jdk/24/36/bundles/linux-aarch64/jdk-24_linux-aarch64_bin.tar.gz/jdk-24 -Djava.io.tmpdir=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221103/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/31028373-98f4-4dc1-acbb-31b679101489/runs/08591023-258f-449b-9986-67efeceae0ca/testoutput/test-support/jtreg_open_test_hotspot_jtreg_hotspot_tier2_runtime/tmp -Xcomp -ea -esa -XX:CompileThreshold=100 -XX:+UnlockExperimentalVMOptions -XX:+TieredCompilation -XX:+DeoptimizeALot -XX:DumpLoadedClassList=runtime.cds.appcds.dynamicArchive.LambdaForClassInBaseArchive.java-classlist -Xshare:auto -Dtest.timeout.factor=16.0 -XX:SharedArchiveFile=null -XX:+UnlockDiagnosticVMOptions -XX:VerifyArchivedFields=1 SimpleApp
+
+Host: AArch64, 16 cores, 31G, Oracle Linux Server release 8.10
+Time: Sat Aug 16 22:55:58 2025 UTC elapsed time: 8.370057 seconds (0d 0h 0m 8s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000ffff842a8c90):  JavaThread ""C2 CompilerThread0"" daemon [_thread_in_vm, id=3392161, stack(0x0000ffff47407000,0x0000ffff47605000) (2040K)]
+
+
+Current CompileTask:
+C2:8370 2517    b  4       jdk.internal.loader.ClassLoaders::<clinit> (208 bytes)
+
+Stack: [0x0000ffff47407000,0x0000ffff47605000],  sp=0x0000ffff47600bb0,  free space=2022k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0x2022a68]
+[error occurred during error reporting (printing native stack (with source info)), id 0xe0000000, Internal Error (/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221110/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b5b13214-19f5-4829-8695-73663703e10c/runs/f95db40c-9f99-4b0e-a959-49c4d2ba5c6d/workspace/open/src/hotspot/share/utilities/elfFile.cpp:742)]
+
+Retrying call stack printing without source information...
+
+[error occurred during error reporting (retry printing native stack (no source info)), id 0xb, SIGSEGV (0xb) at pc=0x0000ffff8c0cbc8c]
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 2 (SEGV_ACCERR), si_addr: 0x0000ffff8be13a68
+
+
+It is a concern that we are unable to get any stack trace.";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;aarch64;;;;;;;;;;;;;;;;;;;;"0|i3cu63:";9223372036854775807;;;compiler;;;;;;;"2025-08-19 22:08;thartmann;[~kvn] Could this be Leyden related? ;;;";"2025-08-25 00:26;thartmann;ILW = Crash in C2 compiled code, only happened once on AArch64, no known workaround but disable compilation of affected method = HLM = P3;;;";;;;;;;;;;;;;;;;;;;;;
+Test crashed during compilation with SIGSEGV in CodeEmitInfo::interpreter_frame_size() ;JDK-8369948;5173431;Bug;Open;JDK;JDK;software;duke;;;P3;;;dholmes;dholmes;2025-10-15 17:54;2025-11-07 07:06;2026-02-09 16:43;;26;;27;hotspot;;0;intermittent;oracle-triage-26;tier5;;;"Test: vmTestbase/jit/deoptimization/test06/test06.java
+
+-XX:+UnlockDiagnosticVMOptions -XX:-TieredCompilation -XX:+StressUnstableIfTraps
+
+agent.trace shows:
+
+[2025-10-15 05:33:26,398]: POOL: Reusing Agent[3]
+[2025-10-15 05:33:26,866] Agent[3]: stdout: #
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # A fatal error has been detected by the Java Runtime Environment:
+[2025-10-15 05:33:26,872] Agent[3]: stdout: #
+[2025-10-15 05:33:26,872] Agent[3]: stdout: #  SIGSEGV (0xb) at pc=0x0000000102afb084, pid=44301, tid=27907
+[2025-10-15 05:33:26,872] Agent[3]: stdout: #
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # JRE version: Java(TM) SE Runtime Environment (26.0+20) (fastdebug build 26-ea+20-2031)
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # Java VM: Java HotSpot(TM) 64-Bit Server VM (fastdebug 26-ea+20-2031, mixed mode, tiered, compressed oops, compressed class ptrs, g1 gc, bsd-aarch64)
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # Problematic frame:
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # V  [libjvm.dylib+0x30f084]  CodeEmitInfo::interpreter_frame_size() const+0x28
+[2025-10-15 05:33:26,872] Agent[3]: stdout: #
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # Core dump will be written. Default location: core.44301
+[2025-10-15 05:33:26,872] Agent[3]: stdout: #
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # An error report file with more information is saved as:
+[2025-10-15 05:33:26,872] Agent[3]: stdout: # /System/Volumes/Data/mesos/work_dir/slaves/0103b69c-746c-4fb5-bf13-94918f380124-S1626/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/e72cd045-733a-410e-95d9-d3407be6c8f5/runs/cd1e3f0e-160a-45dc-88ae-d540406cbae0/testoutput/test-support/jtreg_open_test_hotspot_jtreg_vmTestbase_vm_compiler/scratch/4/hs_err_pid44301.log
+[2025-10-15 05:33:26,941] Agent[3]: stdout: #
+[2025-10-15 05:33:26,941] Agent[3]: stdout: # Compiler replay data is saved as:
+[2025-10-15 05:33:26,941] Agent[3]: stdout: # /System/Volumes/Data/mesos/work_dir/slaves/0103b69c-746c-4fb5-bf13-94918f380124-S1626/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/e72cd045-733a-410e-95d9-d3407be6c8f5/runs/cd1e3f0e-160a-45dc-88ae-d540406cbae0/testoutput/test-support/jtreg_open_test_hotspot_jtreg_vmTestbase_vm_compiler/scratch/4/replay_pid44301.log
+[2025-10-15 05:33:26,941] Agent[3]: stdout: #
+[2025-10-15 05:33:26,941] Agent[3]: stdout: # If you would like to submit a bug report, please visit:
+[2025-10-15 05:33:26,941] Agent[3]: stdout: #   https://bugreport.java.com/bugreport/crash.jsp
+[2025-10-15 05:33:26,941] Agent[3]: stdout: #
+
+Unfortunately the artifacts were not preserved.";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;aarch64;;;;;;;;os_x;;;;;;;;;;;;"0|i3do23:";9223372036854775807;;;compiler;;;;;;;"2025-10-17 08:29;chagedorn;Initial ILW = Segfault, intermittent with StressUnstableIfTraps, no workaround other than not using StressUnstableIfTraps = HLM = P3;;;";;;;;;;;;;;;;;;;;;;;;;
+Regression ~20% on Dacapo-sunflow large with Compact Object Headers;JDK-8376037;5181154;Bug;Open;JDK;JDK;software;duke;;;P3;;;ecaspole;ecaspole;2026-01-21 13:45;2026-02-03 08:48;2026-02-09 16:43;;26;;27;hotspot;;0;performance;;;;;"In the course of working on JDK-8365493 and JDK-8370848, we noticed that there is a ~20% regression on Dacapo sunflow --size large on the OCI A1.160 shape. On this shape we run the jobs on node 0 so this one runs with 80 threads.
+
+baseline:
+-Xms8g -Xmx8g -XX:+UseLargePages -XX:+UnlockDiagnosticVMOptions -XX:+UseObjectMonitorTable
+
+test:
+-Xms8g -Xmx8g -XX:+UseLargePages -XX:+UnlockDiagnosticVMOptions -XX:+UseCompactObjectHeaders
+
+Using Dacapo flags:
+--size large --iterations 4  sunflow
+
+AFAICT this affects G1 more than ParGC but I will update if I find otherwise.
+I have not tried to find the earliest version where this started.";Using node 0 of an OCI BM.A1.160  shape.;;;;;;;;;;;;JDK-8360700;;;JDK-8365493;JDK-8370848;;;;;;JDK-8305895;;;;;;;;aarch64;;;;;;;;linux;;;;;;;;;;;;"0|i3ev17:";9223372036854775807;;;gc;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+JFR: Cutoff parameter ignored for path-to-gc-roots in JFR.dump;JDK-8373416;5177943;Bug;Open;JDK;JDK;software;duke;;;P3;;stuefe;stuefe;stuefe;2025-12-10 03:19;2026-01-12 20:59;2026-02-09 16:43;;26;;tbd;hotspot;;0;jfr;;;;;"I noticed this when looking at test results from test/jdk/jdk/jfr/jcmd/TestJcmdDumpPathToGCRoots.java.
+
+When we specify a path-to-gc-roots parameter to JFR.dump and the recording had been started with a cutoff, the cutoff is ignored. This means we can spend a lot of time in the dump command.
+
+I followed this strangeness down to :
+
+`DCmdDump.dump(PlatformRecorder, Recording, String, String, Long, Boolean, Instant, ...)  (jdk.jfr.internal.dcmd)` ->
+`DCmdDump.newSnapShot(PlatformRecorder, Recording, Boolean)  (jdk.jfr.internal.dcmd)` ->
+`DCmdDump.newSnapShot(PlatformRecorder, Recording, Boolean)  (jdk.jfr.internal.dcmd)` ->
+PlatformRecording.newSnapshotClone(String, Boolean)  (jdk.jfr.internal)
+
+where we create a snapshot `PlatformRecording` clone from the original `PlatformRecording` that was found to be the recording-to-dump based on the ""name"" parameter give to `JFR.dump`.
+
+The cloned PlatformRecording - which is the one that is eventually dumped - may not get the settings as a copy from the original recording; instead, a clean set of settings may be created here: `OldObjectSample.createSettingsForSnapshot`
+
+As a result, the dump will use the default cutoff parameter of ""infinite"" .
+
+I have no idea whether this is intentional. In TestJcmdDumpPathToGCRoots, we seem to expect that the gc root paths are dumped even when specifying cutoffs (see https://github.com/openjdk/jdk/blob/8eaeb6990b85ac8717f4fc4ce883f674017b91f3/test/jdk/jdk/jfr/jcmd/TestJcmdDumpPathToGCRoots.java#L64C1-L64C96)
+
+There is also this mysterious comment here: https://github.com/openjdk/jdk/blob/8eaeb6990b85ac8717f4fc4ce883f674017b91f3/test/jdk/jdk/jfr/jcmd/TestJcmdDumpPathToGCRoots.java#L62 - which seems to indicate something about parameter order?
+
+If it is intentional, comments would be very helpful; if not, a fix would be nice.
+
+
+
+
+
+";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3ecqb:";9223372036854775807;;;jfr;;;;;;;"2025-12-10 03:19;stuefe;[~egahlin] It would be great if you could chime in. This cutoff is really helpful when analyzing problems with the test, which is why I spend so much time investigating this.;;;";"2025-12-10 04:51;egahlin;[~stuefe] Not sure I understand. 
+
+Could you state the problem more clearly, for example, using parameters to -XX:StartFlightRecording or JFR.dump in a sequence.;;;";"2025-12-10 21:01;stuefe;Hi [~egahlin], 
+
+You see this when working with test/jdk/jdk/jfr/jcmd/TestJcmdDumpPathToGCRoots.java.
+
+e.g. this line:
+
+`testDump(""path-to-gc-roots=true"", Collections.singletonMap(settingName, ""0 ns""), true);`
+
+You'll see that the `0 ns` cutoff parameter is not passed down to the JVM. Which is why the test tests for ""true"", I guess? But that does not make sense.
+
+The same is true if you specify any other cutoff value, e.g., ""30 s"", which is what I did since I wanted to curtail a long-running buggy path-to-gc-roots search.
+
+Note that in order for this to be observable, the path-to-gc-roots search needs to be slow. E.g. by adding a sleep into `PathToGcRootsOperation::doit()`.
+
+In fact, in this whole test sequence:
+
+https://github.com/openjdk/jdk/blob/74dca863c2e61c13884c3454b8da7be125235970/test/jdk/jdk/jfr/jcmd/TestJcmdDumpPathToGCRoots.java#L63-L69
+
+The cutoff parameter is ignored for all six testDump() calls.
+
+A reproduction case would be the same as this test case - start a recording with a cutoff parameter and then manually call JFR.dump with path-to-gc-roots. 
+
+
+
+
+;;;";"2025-12-10 21:45;egahlin;[~stuefe] What I was trying to understand (first), is if there's a behavioral problem. This is how I think it should work, but this is what happens. That's why I suggested that the problem be described from a user perspective.
+
+I take it now that it's only an implementation problem, and perhaps a test problem that can't detect it?;;;";"2025-12-10 21:52;egahlin;""start a recording with a cutoff parameter ""
+
+That sentence can mean:
+-XX:StartFlightRecording:jdk.OldObjectSample#cutoff=0ns
+-XX:StartFlightRecording:jdk.OldObjectSample#cutoff=1s
+-XX:StartFlightRecording:jdk.OldObjectSample#cutoff=infinity
+-XX:StartFlightRecording:path-to-gc-roots=true
+-XX:StartFlightRecording:path-to-gc-roots=false
+
+Are all problematic?;;;";;;;;;;;;;;;;;;;;;
+jdk/jfr/jvm/TestWaste.java failing after JDK-8369949;JDK-8371630;5175621;Bug;Open;JDK;JDK;software;duke;;;P3;;;alanb;alanb;2025-11-11 03:35;2026-01-23 00:22;2026-02-09 16:43;;26;27;27;hotspot;;0;problemlist;tier5;;;;"Not much in the .jtr files except the Linux exit code is 139, on Windows it is -1073741819.  Sightings so far are fastdebug builds on linux-x64 and windows-x64.
+
+";;;;;;;;;;;;;;;;JDK-8373096;;;;;;;JDK-8372587;JDK-8373096;JDK-8369949;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3e077:";9223372036854775807;;;jfr;;;;;;;"2025-11-11 07:24;egahlin;This test still fails after the fix https://bugs.openjdk.org/browse/JDK-8369949;;;";"2025-11-11 08:20;krk;Is the only failure in windows?;;;";"2025-11-11 09:47;krk;Are there more environment details you could share, as I couldn't repro the failure on x86_64 and aarch64 linux.;;;";"2025-11-12 04:20;egahlin;Failures are on Windows and Linux. Debug only. Exit code 139 on Linux.  Only x64 so far.
+
+;;;";"2025-11-12 05:06;simonis;[~alanb], [~egahlin] could you please provide more details about the environment and the exact configuration for which this test fails for you? We can not reproduce this failure in our environment. Attaching the .jtr file might also help.
+
+Thanks,
+Volker
+;;;";"2025-11-12 06:03;egahlin; I can't share hosts or path names of Oracle internal systems, but there is nothing to see. This is all we got:
+
+#section:main
+----------messages:(8/487)----------
+command: main -Xlog:jfr+system+parser=debug -XX:TLABSize=2k jdk.jfr.jvm.TestWaste
+reason: User specified action: run main/othervm -Xlog:jfr+system+parser=debug -XX:TLABSize=2k jdk.jfr.jvm.TestWaste 
+started: Tue Nov 11 04:33:41.614 UTC 2025
+Mode: othervm [/othervm specified]
+Additional options from @modules: --add-modules jdk.jfr --add-exports jdk.jfr/jdk.jfr.internal.test=ALL-UNNAMED
+Process id: 5880
+finished: Tue Nov 11 04:33:54.745 UTC 2025
+elapsed time (seconds): 13.131
+----------configuration:(5/172)----------
+Boot Layer
+  add modules:   jdk.jfr                       
+  limit modules: java.base jdk.jfr             
+  add exports:   jdk.jfr/jdk.jfr.internal.test ALL-UNNAMED
+
+----------System.out:(0/0)----------
+----------System.err:(0/0)----------
+----------rerun:(50/6956)*----------
+...
+result: Failed. Unexpected exit from test [exit code: -1073741819]
+
+test result: Failed. Unexpected exit from test [exit code: -1073741819];;;";"2025-11-14 04:54;krk;I tried different RAM and CPU count configurations. No repro of the failure so far.;;;";"2025-11-14 05:18;alanb;There are dozens of sightings in our CI but there isn't anything in the output. They runs seem to be -Xmx768m -XX:MaxRAMPercentage=4.16667. Also these are fastdebug builds.;;;";"2025-11-14 10:26;simonis;This is very mysterious. [~krk] is trying to reproduce this issue since days without any success. Can you please post the exact commit from which you built, the configure parameters you used to built and the hardware you are running on?
+
+Also, searching for exit code 139 reveals that his is usually caused if a program is crashing with a signal 11 due to a SIGSEGV. This means that the VM should have produced a hs_err file. So could you please see if you can find one and share it here?
+
+On the other hand, this SO answer (https://stackoverflow.com/questions/1101957/are-there-any-standard-exit-status-codes-in-linux/1104641#1104641) mentions that exit code 139 is the result of a process being killed by SIGSEGV (i.e. signal 11) if it doesn't have a custom signal handler for SIGSEGV which calls exit() itself. Now the JVM normally has such a signal handler which catches SIGSEGV and produces a hs_err file. But if you can't find it, maybe the JVM was killed in a really bad way such that it didn't even had a chance to invoke its signal handler? Can it be  that this is an infrastructure issue where the JVM gets killed for other reasons (e.g. memory pressure)?;;;";"2025-11-17 07:17;krk;Still no repro on my side. Is there any detail of the environment that could help repro, that is not already shared in this ticket?;;;";"2025-11-17 07:35;mgronlun;Core was generated by `jdk-26+25-2489/linux-x64-debug.jdk'.
+Program terminated with signal SIGSEGV, Segmentation fault.
+
+#0  OopMapBlock::size_in_words ()
+    at open/src/hotspot/share/oops/instanceKlass.hpp:119
+#1  InstanceKlass::nonstatic_oop_map_count (this=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/instanceKlass.hpp:673
+#2  InstanceKlass::oop_oop_iterate_oop_maps<narrowOop, DFSClosure> (this=0x7f06207f03f0, obj=..., closure=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:125
+#3  InstanceKlass::oop_oop_iterate<narrowOop, DFSClosure> (this=0x7f06207f03f0, obj=..., closure=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:159
+#4  OopOopIterateDispatch<DFSClosure>::Table::oop_oop_iterate<InstanceKlass, narrowOop> (cl=cl@entry=0x7f06207f03f0, obj=..., k=k@entry=0x5b1bd9d0)
+    at open/src/hotspot/share/memory/iterator.inline.hpp:109
+#5  0x00007f064234ad3b in OopIteratorClosureDispatch::oop_oop_iterate<DFSClosure> (obj=..., cl=0x7f06207f03f0, klass=0x5b1bd9d0)
+    at open/src/hotspot/share/memory/iterator.inline.hpp:294
+#6  oopDesc::oop_iterate<DFSClosure> (this=<optimized out>, cl=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/oop.inline.hpp:387
+#7  DFSClosure::closure_impl (this=this@entry=0x7f06207f03f0, reference=..., pointee=...)
+    at open/src/hotspot/share/jfr/leakprofiler/chains/dfsClosure.cpp:102
+#8  0x00007f064234ba46 in DFSClosure::do_oop (this=this@entry=0x7f06207f03f0, ref=ref@entry=0xd23e114c)
+    at open/src/hotspot/share/jfr/leakprofiler/chains/dfsClosure.cpp:147
+#9  0x00007f064234f25f in call_do_oop<narrowOop, DFSClosure, OopClosure, DFSClosure> (closure=0x7f06207f03f0, p=0xd23e114c)
+    at open/src/hotspot/share/utilities/devirtualizer.inline.hpp:87
+#10 Devirtualizer::do_oop<DFSClosure, narrowOop> (closure=0x7f06207f03f0, p=0xd23e114c)
+    at open/src/hotspot/share/utilities/devirtualizer.inline.hpp:92
+#11 InstanceKlass::oop_oop_iterate_oop_map<narrowOop, DFSClosure> (this=0x7f06207f03f0, map=0x5c0190e8, obj=..., closure=<optimized out>)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:84
+#12 InstanceKlass::oop_oop_iterate_oop_maps<narrowOop, DFSClosure> (this=0x7f06207f03f0, obj=..., closure=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:128
+#13 InstanceKlass::oop_oop_iterate<narrowOop, DFSClosure> (this=0x7f06207f03f0, obj=..., closure=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:159
+#14 OopOopIterateDispatch<DFSClosure>::Table::oop_oop_iterate<InstanceKlass, narrowOop> (cl=cl@entry=0x7f06207f03f0, obj=..., k=k@entry=0x5c018ec8)
+    at open/src/hotspot/share/memory/iterator.inline.hpp:109
+#15 0x00007f064234ad3b in OopIteratorClosureDispatch::oop_oop_iterate<DFSClosure> (obj=..., cl=0x7f06207f03f0, klass=0x5c018ec8)
+    at open/src/hotspot/share/memory/iterator.inline.hpp:294
+#16 oopDesc::oop_iterate<DFSClosure> (this=<optimized out>, cl=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/oop.inline.hpp:387
+#17 DFSClosure::closure_impl (this=this@entry=0x7f06207f03f0, reference=..., pointee=...)
+    at open/src/hotspot/share/jfr/leakprofiler/chains/dfsClosure.cpp:102
+#18 0x00007f064234ba46 in DFSClosure::do_oop (this=this@entry=0x7f06207f03f0, ref=ref@entry=0xd22c5738)
+    at open/src/hotspot/share/jfr/leakprofiler/chains/dfsClosure.cpp:147
+#19 0x00007f064234f25f in call_do_oop<narrowOop, DFSClosure, OopClosure, DFSClosure> (closure=0x7f06207f03f0, p=0xd22c5738)
+    at open/src/hotspot/share/utilities/devirtualizer.inline.hpp:87
+#20 Devirtualizer::do_oop<DFSClosure, narrowOop> (closure=0x7f06207f03f0, p=0xd22c5738)
+    at open/src/hotspot/share/utilities/devirtualizer.inline.hpp:92
+#21 InstanceKlass::oop_oop_iterate_oop_map<narrowOop, DFSClosure> (this=0x7f06207f03f0, map=0x5c0190e8, obj=..., closure=<optimized out>)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:84
+#22 InstanceKlass::oop_oop_iterate_oop_maps<narrowOop, DFSClosure> (this=0x7f06207f03f0, obj=..., closure=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:128
+#23 InstanceKlass::oop_oop_iterate<narrowOop, DFSClosure> (this=0x7f06207f03f0, obj=..., closure=0x7f06207f03f0)
+    at open/src/hotspot/share/oops/instanceKlass.inline.hpp:159
+
+...
+
+
+x/32xg $rsp
+
+0x7f06206f2000: 0x0000000000000000      0x0000000000000000
+0x7f06206f2010: 0x00000000d23e1158      0x0000000000000000
+0x7f06206f2020: 0x00000000d23e1158      0x0000000000000000
+0x7f06206f2030: 0x0000000000000000      0x00007f06207f03f0
+0x7f06206f2040: 0x000000005b1bd9d0      0x00007f06206f20c0
+0x7f06206f2050: 0x00007f06206f20b8      0x00007f064234f0d0
+0x7f06206f2060: 0x00007f06206f2140      0x00007f064234ad3b
+0x7f06206f2070: 0x0000000000000000      0x0000000000000000
+0x7f06206f2080: 0x0000000000000000      0x0000000000000000
+0x7f06206f2090: 0x0000000000000000      0x00007f06207f06b0
+0x7f06206f20a0: 0x00007f06206f20b8      0x00007f06006973e0
+0x7f06206f20b0: 0x00000000d23e1158      0x00000000d23e1158
+0x7f06206f20c0: 0x00000000d23e1158      0x0000000000000000
+0x7f06206f20d0: 0x00007f06206f2100      0x00007f0642469c63
+0x7f06206f20e0: 0x00007f06206f2150      0x00007f0643b10485
+0x7f06206f20f0: 0x00007f0643b4a820      0x00007f0643b05ca4
+
+
+p *(VMThread*)0x7f063c113a80
+$4 = {<NamedThread> = {<NonJavaThread> = {<Thread> = {<ThreadShadow> = {<CHeapObj<(MemTag)2>> = {<No data fields>}, _vptr.ThreadShadow = 0x7f0643a83f98 <vtable for VMThread+16>, _pending_exception = {_o = 0x0}, _exception_file = 0x0, _exception_line = 0}, static _thr_current = 0x7f063c113a80,
+        _nmethod_disarmed_guard_value = 7, _poll_data = {_polling_word = 17433981653976478193, _polling_page = 17433981653976478193}, _gc_data = {8192, 139662203082992, 17433981653976477952, 0, 17433981654212280319, 0, 17433981653976478193 <repeats 34 times>}, _threads_hazard_ptr = 0x0, _threads_list_ptr = 0x0,
+        _nested_threads_hazard_ptr_cnt = 0, static _starting_thread = 0x7f063c030340, _suspendible_thread = false, _indirectly_suspendible_thread = false, _indirectly_safepoint_thread = false, _last_handle_mark = 0x7f06207f0a30, _threads_do_token = 25, _rcu_counter = 0, _skip_gcalot = false,
+        _tlab = {<CHeapObj<(MemTag)2>> = {<No data fields>}, _start = 0x0, _top = 0x0, _pf_top = 0x0, _end = 0x0, _allocation_end = 0x0, _desired_size = 0, _refill_waste_limit = 0, _allocated_before_last_gc = 0, static _max_size = 65536, static _reserve_for_allocation_prefetch = 72, static _target_refills = 50,
+          _number_of_refills = 0, _refill_waste = 0, _gc_waste = 0, _slow_allocations = 0, _allocated_size = 0, _allocation_fraction = {<CHeapObj<(MemTag)5>> = {<No data fields>}, _average = 0, _sample_count = 0, _weight = 35, _is_old = false, static OLD_THRESHOLD = 100, _last_sample = 0}}, _allocated_bytes = 0,
+        _heap_sampler = {_sample_threshold = 173677, _tlab_top_at_sample_start = 0x0, _accumulated_tlab_bytes_since_sample = 0, _accumulated_outside_tlab_bytes_since_sample = 0, static _rnd = 50305644335283, static _sampling_interval = 524288}, _statistical_info = {_start_time_stamp = 1426218236031556,
+          _define_class_count = 0}, _jfr_thread_local = {_sample_request = {_sample_sp = 0x0, _sample_pc = 0x0, _sample_bcp = 0x0, _sample_ticks = {<CounterRepresentation<FastUnorderedElapsedCounterSource>> = {<Representation<FastUnorderedElapsedCounterSource>> = {
+                  _rep = 0}, <No data fields>}, <No data fields>}}, _sample_request_queue = {<GrowableArrayWithAllocator<JfrSampleRequest, GrowableArrayCHeap<JfrSampleRequest, (MemTag)16> >> = {<GrowableArrayView<JfrSampleRequest>> = {<GrowableArrayBase> = {<AnyObj> = {
+                    _vptr.AnyObj = 0x7f0643a7af00 <vtable for GrowableArrayCHeap<JfrSampleRequest, (MemTag)16>+16>, _allocation_t = {18446604408955257607, 0}}, _len = 0, _capacity = 8}, _data = 0x7f063c113f60}, <No data fields>}, <No data fields>},
+          _sample_monitor = {<Mutex> = {<CHeapObj<(MemTag)22>> = {<No data fields>}, static event = Mutex::Rank::event, static service = Mutex::Rank::service, static stackwatermark = Mutex::Rank::stackwatermark, static tty = Mutex::Rank::tty, static oopstorage = Mutex::Rank::oopstorage,
+              static nosafepoint = Mutex::Rank::nosafepoint, static safepoint = Mutex::Rank::safepoint, _owner = 0x0, _lock = {<PlatformMutex> = {<CHeapObj<(MemTag)22>> = {<No data fields>}, _mutex = {__data = {__lock = 0, __count = 0, __owner = 0, __nusers = 0, __kind = 512, __spins = 0, __list = {__prev = 0x0,
+                        __next = 0x0}}, __size = '\000' <repeats 17 times>, ""\002"", '\000' <repeats 21 times>, __align = 0}}, _cond = {__data = {__lock = 0, __futex = 0, __total_seq = 0, __wakeup_seq = 0, __woken_seq = 0, __mutex = 0x200000000, __nwaiters = 0, __broadcast_seq = 0},
+                  __size = '\000' <repeats 36 times>, ""\002\000\000\000\000\000\000\000\000\000\000"", __align = 0}}, _name = 0x7f063c114080 ""jfr thread sample monitor"", _allow_vm_block = true, static _mutex_array = 0x7f0643b43fc0 <_internal_mutex_arr>, static _num_mutex = 99, _rank = Mutex::Rank::nosafepoint,
+              _next = 0xf1f1f1f1f1f1f1f1, _last_owner = 0xf1f1f1f1f1f1f1f1, _skip_rank_check = false, static _allow_vm_block_flag = true, static _safepoint_check_flag = Mutex::SafepointCheckFlag::_safepoint_check_flag,
+              static _no_safepoint_check_flag = Mutex::SafepointCheckFlag::_no_safepoint_check_flag}, <No data fields>}, _java_event_writer = 0x0, _java_buffer = 0x0, _native_buffer = 0x7f05d403f7e0, _shelved_buffer = 0x0, _load_barrier_buffer_epoch_0 = 0x0, _load_barrier_buffer_epoch_1 = 0x7f0600011bc0,
+          _checkpoint_buffer_epoch_0 = 0x0, _checkpoint_buffer_epoch_1 = 0x0, _sample_state = 0, _dcmd_arena = 0x0, _thread = {_ptr = 0x0}, _vthread_id = 0, _jvm_thread_id = 14, _thread_id_alias = 18446744073709551615, _data_lost = 0, _stack_trace_id = 18446744073709551615, _stack_trace_hash = 0,
+          _parent_trace_id = 3, _last_allocated_bytes = 0, _user_time = 0, _cpu_time = 0, _wallclock_time = 1426218236038799, _non_reentrant_nesting = 0, _vthread_epoch = 0, _generation = 0, _vthread_excluded = false, _jvm_thread_excluded = false, _enqueued_requests = false, _vthread = false, _notified = false,
+          _dead = false, _sampling_critical_section = false, _cpu_timer = 0x0, _cpu_time_jfr_locked = JfrThreadLocal::UNLOCKED, _has_cpu_time_jfr_requests = false, _cpu_time_jfr_queue = {static CPU_TIME_QUEUE_CAPACITY = 500, _data = 0x0, _capacity = 0, _head = 0, _lost_samples = 0,
+            _lost_samples_due_to_queue_full = 0, static CPU_TIME_QUEUE_INITIAL_CAPACITY = 20, static CPU_TIME_QUEUE_MAX_CAPACITY = 2000}, _do_async_processing_of_cpu_time_jfr_requests = false}, _current_pending_raw_monitor = 0x0, _run_state = Thread::RUN, _unhandled_oops = 0xf1f1f1f1f1f1f1f1,
+        _osthread = 0x7f063c1145c0, _resource_area = 0x7f063c1140c0, _current_resource_mark = 0x7f06207f07a0, _handle_area = 0x7f063c114120, _metadata_handles = 0x7f063c114180, _stack_base = 0x7f06207f2000 """", _stack_size = 1048576, _owned_locks = 0x7f0643b472b0 <mutex_init()::Threads_lock_storage>,
+        _jvmti_env_iteration_count = 0, _ParkEvent = 0x7f063c0be600, _hashStateW = 273326509, _hashStateX = 2083900982, _hashStateY = 842502087, _hashStateZ = 34663, _in_asgct = false, _vm_error_callbacks = 0x0}, static _the_list = {{_t = {_head = 0x7f0600694560, _protect = {
+              _enter = {<AtomicImpl::SupportsArithmetic<unsigned int>> = {<AtomicImpl::SupportsExchange<unsigned int>> = {<AtomicImpl::CommonCore<unsigned int>> = {_value = 9935}, <No data fields>}, <No data fields>}, <No data fields>}, _exit = {
+                {<AtomicImpl::SupportsArithmetic<unsigned int>> = {<AtomicImpl::SupportsExchange<unsigned int>> = {<AtomicImpl::CommonCore<unsigned int>> = {_value = 2}, <No data fields>}, <No data fields>}, <No data fields>},
+                {<AtomicImpl::SupportsArithmetic<unsigned int>> = {<AtomicImpl::SupportsExchange<unsigned int>> = {<AtomicImpl::CommonCore<unsigned int>> = {_value = 9935}, <No data fields>}, <No data fields>}, <No data fields>}},
+              _waiting_for = {<AtomicImpl::SupportsArithmetic<unsigned int>> = {<AtomicImpl::SupportsExchange<unsigned int>> = {<AtomicImpl::CommonCore<unsigned int>> = {_value = 2}, <No data fields>}, <No data fields>}, <No data fields>}, _wakeup = {<CHeapObj<(MemTag)22>> = {<No data fields>},
+                _impl = {<CHeapObj<(MemTag)9>> = {<No data fields>}, _semaphore = {__size = '\000' <repeats 31 times>, __align = 0}}}, _writers = {<AtomicImpl::SupportsArithmetic<unsigned int>> = {<AtomicImpl::SupportsExchange<unsigned int>> = {<AtomicImpl::CommonCore<unsigned int>> = {
+                      _value = 0}, <No data fields>}, <No data fields>}, <No data fields>}}}}, _initialized = true}, _next = 0x7f063c0cafc0}, _name = 0x7f063c114350 ""VM Thread"", _processed_thread = 0x0, _gc_id = 4294967295}, _is_running = true, static _current_priority = <optimized out>,
+  static _should_terminate = false, static _terminated = false, static _terminate_lock = 0x7f063c1143b0, static _perf_accumulated_vm_operation_time = 0x7f063c1144a0, static _timeout_task = 0x0, static _cur_vm_operation = 0x7f05dfdfbf60, static _next_vm_operation = 0x7f05dfdfbf60,
+
+
+ _stack_base = 0x7f06207f2000 """", _stack_size = 1048576,
+ 
+ 0x7f06207f2000 (_stack_base) - 0x7f06206f2000 ($rsp) = 0x10000 == 0n1048576 (_stack_size) => Stack overflow;;;";"2025-11-17 17:06;dholmes;Seems to be an infinite loop in the iterator:
+
+0x00007f064234f161	void OopOopIterateDispatch<DFSClosure>::Table::oop_oop_iterate<InstanceKlass, narrowOop>(DFSClosure*, oop, Klass*) + 0x91
+0x00007f064234ad3b	DFSClosure::closure_impl(UnifiedOopRef, oop) + 0xfb
+0x00007f064234ba46	DFSClosure::do_oop(narrowOop*) + 0xb6
+0x00007f064234f25f	void OopOopIterateDispatch<DFSClosure>::Table::oop_oop_iterate<InstanceKlass, narrowOop>(DFSClosure*, oop, Klass*) + 0x18f
+0x00007f064234ad3b	DFSClosure::closure_impl(UnifiedOopRef, oop) + 0xfb
+0x00007f064234ba46	DFSClosure::do_oop(narrowOop*) + 0xb6
+0x00007f064234f25f	void OopOopIterateDispatch<DFSClosure>::Table::oop_oop_iterate<InstanceKlass, narrowOop>(DFSClosure*, oop, Klass*) + 0x18f
+0x00007f064234ad3b	DFSClosure::closure_impl(UnifiedOopRef, oop) + 0xfb
+0x00007f064234ba46	DFSClosure::do_oop(narrowOop*) + 0xb6
+...
+
+;;;";"2025-11-18 03:36;krk;Rather than an infinite loop, my suspicion is that the object graph is deeper than the allotted stack space. In https://bugs.openjdk.org/browse/JDK-8369949, setting -Xmx2g also helped, eventually I decreased the max_dfs_depth limit instead, at [1].
+
+Since I cannot repro the issue, it may help if someone could try on oracle hosts to reduce the limit even further, or to test with -Xmx2g (or higher) to validate that there is no infinite loop.
+
+[1] https://github.com/openjdk/jdk/pull/28215/files#diff-7038d7c9fc9cbeab6419c9045ed1addde740957a62e95be3c575b70f2373010eL40
+;;;";"2025-11-20 16:04;dholmes;So is this just a continuation of the problem reported in JDK-8369949 (which obviously did not fix the issue) which in turn was trying to address the problem still present after JDK-8282427?
+
+It seems this test has never been stable since it was introdsuced by JDK-8282153.;;;";"2025-11-21 03:39;krk;Without the fix in JDK-8369949, test fails in my environment, with the fix it passes.;;;";"2025-11-25 17:25;dholmes;This test needs to be put on the ProblemList.;;;";"2025-11-26 03:54;krk;Adding to the ProblemList in JDK-8372587.;;;";"2026-01-15 02:57;stuefe;Due to a customer issue of ours, I am currently implementing a patch to make this DFS search in JFR non-recursive (JDK-8373096). This may fix the issue described here.
+
+The fact that no hs-err file is written is normal. We run into a native stack overflow. The signal handler that would generate the hs-err file has no stack to run on. That causes the process to die suddenly. To improve matters, I am also working on a way to get hs-err files for native stack overflows that occur in JavaThread children, or at least for the VMThread, which is a JavaThread and which is processing the DFS search here. See JDK-8373128.;;;";"2026-01-23 00:22;stuefe;Observations/Thoughts:
+
+- Standard stack size for VMThread is 1024KB. With the max depth of 3200 (JDK-8369949), the test fails on my machine with a VMThread stack size of 950KB. So, we are just barely avoiding the stack overflow with 1024KB. Stack size may depend on external factors, e.g. how the JVM was built. GCC stack protector comes to mind, though I think we all build with that. There could be other mechanisms that could explain why one vendor sees the problem with the default VMThread stack size, while others don't.
+- The behavior also depends on the JVM heap size: it influences the size of the BFS edge queue, and a larger BFS edge queue will delay the jump into the DFS part of the search, which may result in a smaller stack size. There is a WhiteBox function to skip BFS altogether.
+- With the upcoming patch for JDK-8369949, I am able to execute the Test successfully with just 64KB of stack size, even with max_depth increased to old values. ;;;";;;;
+Test gtest/NMTGtests.java#nmt-summary crashed;JDK-8372231;5176330;Bug;In Progress;JDK;JDK;software;duke;;;P3;;azafari;dholmes;dholmes;2025-11-19 19:07;2026-02-04 07:38;2026-02-09 16:43;;26;repo-valhalla;27;hotspot;;0;intermittent;nmt;noreg-sqe;tier1;;"[ RUN      ] NMT.test_double_free_vm_assert
+NMT overwrite death test, please ignore subsequent error dump.
+/opt/mach5/mesos/work_dir/slaves/da1065b5-7b94-4f0d-85e9-a3a252b9a32e-S7293/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b947ca5f-c1ce-4a2c-86bc-cebf8a2722a6/runs/2002624d-2289-4767-8900-3b7ff4fb52fa/workspace/open/test/hotspot/gtest/nmt/test_nmt_buffer_overflow_detection.cpp:110: Failure
+Death test: child_NMT_test_double_free_()
+    Result: died but not with expected error.
+  Expected: contains regular expression "".*header canary.*""
+Actual msg:
+[  DEATH   ] signaled: SIGSEGV
+
+[  FAILED  ] NMT.test_double_free_vm_assert (137 ms)";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3e4dv:";9223372036854775807;;;runtime;;;;Fix Understood;;;"2025-11-24 08:50;lfoltan;RT Triage: ILW = HLM = P3;;;";"2025-11-25 07:16;jsjolen;This test is fragile by necessity. We are attempting to detect a double free through NMT. This means that, if we're unlucky, the allocator may return the memory to the OS before we do the double-free. In 5 years, we've seen this fail once, that seems like an appropriate frequency.;;;";"2026-02-04 04:54;roboduke;A pull request was submitted for review.
+Branch: master
+URL: https://git.openjdk.org/jdk/pull/29567
+Date: 2026-02-04 12:41:21 +0000;;;";;;;;;;;;;;;;;;;;;;;
+Enforce of malloc as noexcept not compiling due to AIX stdlib bug ;JDK-8369486;5172902;Bug;Open;JDK;JDK;software;duke;;;P3;;aleonard;aleonard;aleonard;2025-10-09 01:36;2026-01-20 11:10;2026-02-09 16:43;;26;;tbd;hotspot;;0;cpp;oraclejdk-na;sap-aix-na;;;"Following discussions in bug https://bugs.openjdk.org/browse/JDK-8369205
+to provide a workaround to allow AIX to compile we need to revert
+the noexcept for AIX ?
+";;;;;;;;;;;;JDK-8369186;;;;;;;;;;;JDK-8369205;JDK-8372754;;;;;;;ppc;;;;;;b16;;aix;;;;;;;;;;;;"0|i3dksj:";9223372036854775807;;;runtime;;;;;;;"2025-11-21 01:50;aleonard;[~kbarrett] Hi Kim, is there an outlook on this workaround for AIX please? thanks;;;";"2025-11-23 21:16;kbarrett;[~aleonard] I have a change that is close to being PR-ready that I think will also address this. I haven't filed an RFE for that other change yet, but it's to add cppstdlib/cstdlib.hpp wrapper, as a followup to JDK-8369186 that is similar to JDK-8369187.
+;;;";"2025-11-24 08:01;aleonard;Thank you [~kbarrett];;;";"2026-01-19 09:48;kbarrett;JDK-8372754 fixed the problem in JDK 27.  But it's not a great candidate for backporting to JDK 26.  I think a better AIX workaround solution for JDK 26 is what I suggested here:
+https://bugs.openjdk.org/browse/JDK-8369205?focusedId=14823480&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-14823480
+e.g. disabling the problem forbiddings for AIX. I'm not planning to do that either, as I can't test it. I want to leave that to you AIX maintainer folks.  Reassigning to [~aleonard].
+
+;;;";"2026-01-20 02:48;aleonard;Thank you [~kbarrett] i'll see if I can find someone to take a look;;;";"2026-01-20 05:58;aleonard;[~sroy] Hi, would you be able to take a look at this please?;;;";;;;;;;;;;;;;;;;;
+SIGSEGV in Dictionary::find_class;JDK-8365928;5168811;Bug;Open;JDK;JDK;software;duke;;;P3;;coleenp;dholmes;dholmes;2025-08-21 05:14;2025-10-21 12:05;2026-02-09 16:43;;26;;tbd;hotspot;;0;tier2;;;;;"Test: java/text/Format/CompactNumberFormat/TestCompactNumber.java
+
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x0000ffffb7b72280, pid=848509, tid=848564
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0+12) (build 26-ea+12-1256)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (26-ea+12-1256, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, linux-aarch64)
+# Problematic frame:
+# V  [libjvm.so+0x6de280]  Dictionary::find_class(Thread*, Symbol*)+0x30
+#
+# Core dump will be written. Default location: Core dumps may be processed with ""/opt/core.sh %p"" (or dumping to /opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/scratch/1/core.848509)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Dtest.vm.opts=-Xmx768m -XX:MaxRAMPercentage=3.125 -Dtest.boot.jdk=/opt/mach5/mesos/work_dir/jib-master/install/jdk/24/36/bundles/linux-aarch64/jdk-24_linux-aarch64_bin.tar.gz/jdk-24 -Djava.io.tmpdir=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/tmp -ea -esa -Dtest.tool.vm.opts=-J-Xmx768m -J-XX:MaxRAMPercentage=3.125 -J-Dtest.boot.jdk=/opt/mach5/mesos/work_dir/jib-master/install/jdk/24/36/bundles/linux-aarch64/jdk-24_linux-aarch64_bin.tar.gz/jdk-24 -J-Djava.io.tmpdir=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/tmp -J-ea -J-esa -Dtest.compiler.opts= -Dtest.java.opts= -Dtest.jdk=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/linux-aarch64.jdk/jdk-26 -Dcompile.jdk=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/linux-aarch64.jdk/jdk-26 -Dtest.timeout.factor=4.0 -Dtest.nativepath=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/linux-aarch64.test/jdk/jtreg/native -Dtest.root=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/src.full/open/test/jdk -Dtest.name=java/text/Format/CompactNumberFormat/TestCompactNumber.java -Dtest.verbose=Verbose[p=BRIEF,f=FULL,e=FULL,t=true,m=false] -Dtest.file=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/src.full/open/test/jdk/java/text/Format/CompactNumberFormat/TestCompactNumber.java -Dtest.main.class=TestCompactNumber -Dtest.src=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/src.full/open/test/jdk/java/text/Format/CompactNumberFormat -Dtest.src.path=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/src.full/open/test/jdk/java/text/Format/CompactNumberFormat -Dtest.classes=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/classes/0/java/text/Format/CompactNumberFormat/TestCompactNumber.d -Dtest.class.path=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/classes/0/java/text/Format/CompactNumberFormat/TestCompactNumber.d -Dtest.class.path.prefix=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/classes/0/java/text/Format/CompactNumberFormat/TestCompactNumber.d:/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/src.full/open/test/jdk/java/text/Format/CompactNumberFormat -Dtest.modules=jdk.localedata --add-modules=jdk.localedata -Xmx768m -XX:MaxRAMPercentage=3.125 -Dtest.boot.jdk=/opt/mach5/mesos/work_dir/jib-master/install/jdk/24/36/bundles/linux-aarch64/jdk-24_linux-aarch64_bin.tar.gz/jdk-24 -Djava.io.tmpdir=/opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/tmp -ea -esa -Djava.library.path=/opt/mach5/mesos/work_dir/jib-master/install/jdk-26+12-1256/linux-aarch64.test/jdk/jtreg/native com.sun.javatest.regtest.agent.MainWrapper /opt/mach5/mesos/work_dir/slaves/f7f8bd65-a387-4a2b-b519-702f2fefaf87-S221176/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/b73eed9a-fa1b-4230-a329-4e18382ea221/runs/007205c6-18a8-4df8-b116-7763baddf90b/testoutput/test-support/jtreg_open_test_jdk_tier2_part2/java/text/Format/CompactNumberFormat/TestCompactNumber.d/testng.0.jta java/text/Format/CompactNumberFormat/TestCompactNumber.java false TestCompactNumber
+
+Host: AArch64, 16 cores, 31G, Oracle Linux Server release 8.10
+Time: Thu Aug 21 09:51:43 2025 UTC elapsed time: 0.292596 seconds (0d 0h 0m 0s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000ffffb01c51a0):  JavaThread ""MainThread""        [_thread_in_vm, id=848564, stack(0x0000ffff8818f000,0x0000ffff8838d000) (2040K)]
+
+Stack: [0x0000ffff8818f000,0x0000ffff8838d000],  sp=0x0000ffff88387530,  free space=2017k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0x6de280]  Dictionary::find_class(Thread*, Symbol*)+0x30  (atomic_linux_aarch64.hpp:203)
+V  [libjvm.so+0xe1282c]  SystemDictionary::resolve_with_circularity_detection(Symbol*, Symbol*, Handle, bool, JavaThread*)+0x228  (systemDictionary.cpp:474)
+V  [libjvm.so+0x5a0408]  ClassFileParser::parse_interfaces(ClassFileStream const*, int, ConstantPool*, bool*, JavaThread*) [clone .part.0]+0x238  (systemDictionary.hpp:118)
+V  [libjvm.so+0x5a4fb4]  ClassFileParser::parse_stream(ClassFileStream const*, JavaThread*) [clone .part.0]+0x790  (classFileParser.hpp:383)
+V  [libjvm.so+0x5a5a50]  ClassFileParser::ClassFileParser(ClassFileStream*, Symbol*, ClassLoaderData*, ClassLoadInfo const*, ClassFileParser::Publicity, JavaThread*)+0xe8  (classFileParser.cpp:5423)
+V  [libjvm.so+0xae34bc]  KlassFactory::create_from_stream(ClassFileStream*, Symbol*, ClassLoaderData*, ClassLoadInfo const&, JavaThread*)+0x190  (klassFactory.cpp:202)
+V  [libjvm.so+0x5b0c64]  ClassLoader::load_class(Symbol*, PackageEntry*, bool, JavaThread*)+0x1a4  (classLoader.cpp:1110)
+V  [libjvm.so+0xe13290]  SystemDictionary::load_instance_class_impl(Symbol*, Handle, JavaThread*)+0x370  (systemDictionary.cpp:1236)
+V  [libjvm.so+0xe11920]  SystemDictionary::load_instance_class(Symbol*, Handle, JavaThread*)+0x1c  (systemDictionary.cpp:1300)
+V  [libjvm.so+0xe11f98]  SystemDictionary::resolve_instance_class_or_null(Symbol*, Handle, JavaThread*)+0x52c  (systemDictionary.cpp:694)
+V  [libjvm.so+0xe1282c]  SystemDictionary::resolve_with_circularity_detection(Symbol*, Symbol*, Handle, bool, JavaThread*)+0x228  (systemDictionary.cpp:474)
+V  [libjvm.so+0x5a0408]  ClassFileParser::parse_interfaces(ClassFileStream const*, int, ConstantPool*, bool*, JavaThread*) [clone .part.0]+0x238  (systemDictionary.hpp:118)
+V  [libjvm.so+0x5a4fb4]  ClassFileParser::parse_stream(ClassFileStream const*, JavaThread*) [clone .part.0]+0x790  (classFileParser.hpp:383)
+V  [libjvm.so+0x5a5a50]  ClassFileParser::ClassFileParser(ClassFileStream*, Symbol*, ClassLoaderData*, ClassLoadInfo const*, ClassFileParser::Publicity, JavaThread*)+0xe8  (classFileParser.cpp:5423)
+V  [libjvm.so+0xae34bc]  KlassFactory::create_from_stream(ClassFileStream*, Symbol*, ClassLoaderData*, ClassLoadInfo const&, JavaThread*)+0x190  (klassFactory.cpp:202)
+V  [libjvm.so+0x5b0c64]  ClassLoader::load_class(Symbol*, PackageEntry*, bool, JavaThread*)+0x1a4  (classLoader.cpp:1110)
+V  [libjvm.so+0xe13290]  SystemDictionary::load_instance_class_impl(Symbol*, Handle, JavaThread*)+0x370  (systemDictionary.cpp:1236)
+V  [libjvm.so+0xe11920]  SystemDictionary::load_instance_class(Symbol*, Handle, JavaThread*)+0x1c  (systemDictionary.cpp:1300)
+V  [libjvm.so+0xe11f98]  SystemDictionary::resolve_instance_class_or_null(Symbol*, Handle, JavaThread*)+0x52c  (systemDictionary.cpp:694)
+V  [libjvm.so+0xe1282c]  SystemDictionary::resolve_with_circularity_detection(Symbol*, Symbol*, Handle, bool, JavaThread*)+0x228  (systemDictionary.cpp:474)
+V  [libjvm.so+0x5a543c]  ClassFileParser::post_process_parsed_stream(ClassFileStream const*, ConstantPool*, JavaThread*)+0x2b8  (systemDictionary.hpp:118)
+V  [libjvm.so+0xae34bc]  KlassFactory::create_from_stream(ClassFileStream*, Symbol*, ClassLoaderData*, ClassLoadInfo const&, JavaThread*)+0x190  (klassFactory.cpp:202)
+V  [libjvm.so+0x5b0c64]  ClassLoader::load_class(Symbol*, PackageEntry*, bool, JavaThread*)+0x1a4  (classLoader.cpp:1110)
+V  [libjvm.so+0xe13290]  SystemDictionary::load_instance_class_impl(Symbol*, Handle, JavaThread*)+0x370  (systemDictionary.cpp:1236)
+V  [libjvm.so+0xe11920]  SystemDictionary::load_instance_class(Symbol*, Handle, JavaThread*)+0x1c  (systemDictionary.cpp:1300)
+V  [libjvm.so+0xe11f98]  SystemDictionary::resolve_instance_class_or_null(Symbol*, Handle, JavaThread*)+0x52c  (systemDictionary.cpp:694)
+V  [libjvm.so+0xe134fc]  SystemDictionary::resolve_or_fail(Symbol*, Handle, bool, JavaThread*)+0x5c  (systemDictionary.cpp:354)
+V  [libjvm.so+0x62bcd8]  ConstantPool::klass_at_impl(constantPoolHandle const&, int, JavaThread*)+0x288  (constantPool.cpp:665)
+V  [libjvm.so+0x8a344c]  InterpreterRuntime::_new(JavaThread*, ConstantPool*, int)+0x64  (constantPool.hpp:423)
+j  java.util.stream.StreamSupport.intStream(Ljava/util/Spliterator$OfInt;Z)Ljava/util/stream/IntStream;+0 java.base@26-ea
+j  java.util.Arrays.stream([III)Ljava/util/stream/IntStream;+7 java.base@26-ea
+j  java.util.Arrays.stream([I)Ljava/util/stream/IntStream;+4 java.base@26-ea
+j  org.testng.internal.collections.Ints.asList([I)Ljava/util/List;+1
+j  org.testng.internal.annotations.JDK15TagFactory.createDataProviderTag(Ljava/lang/reflect/Method;Ljava/lang/annotation/Annotation;)Lorg/testng/annotations/IAnnotation;+68
+j  org.testng.internal.annotations.JDK15TagFactory.createTag(Ljava/lang/Class;Ljava/lang/reflect/Method;Ljava/lang/annotation/Annotation;Ljava/lang/Class;)Lorg/testng/annotations/IAnnotation;+17
+j  org.testng.internal.annotations.JDK15AnnotationFinder.lambda$findAnnotation$0(Ljava/lang/Class;Ljava/lang/reflect/Method;Ljava/lang/annotation/Annotation;Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/reflect/Constructor;Ljava/lang/Class;Lorg/testng/internal/collections/Pair;)Lorg/testng/annotations/IAnnotation;+9
+j  org.testng.internal.annotations.JDK15AnnotationFinder$$Lambda+0x0000007801052c78.apply(Ljava/lang/Object;)Ljava/lang/Object;+36
+J 722 c1 java.util.concurrent.ConcurrentHashMap.computeIfAbsent(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object; java.base@26-ea (576 bytes) @ 0x0000ffff98814cdc [0x0000ffff98814700+0x00000000000005dc]
+j  org.testng.internal.annotations.JDK15AnnotationFinder.findAnnotation(Ljava/lang/Class;Ljava/lang/annotation/Annotation;Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/reflect/Constructor;Ljava/lang/reflect/Method;Lorg/testng/internal/collections/Pair;Ljava/lang/Class;)Lorg/testng/annotations/IAnnotation;+29
+j  org.testng.internal.annotations.JDK15AnnotationFinder.findAnnotation(Ljava/lang/Class;Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/testng/annotations/IAnnotation;+82
+j  org.testng.internal.TestNGClassFinder.isTestNGClass(Ljava/lang/Class;Lorg/testng/internal/annotations/IAnnotationFinder;)Z+81
+j  org.testng.internal.TestNGClassFinder.isNotTestNGClass(Ljava/lang/Class;Lorg/testng/internal/annotations/IAnnotationFinder;)Z+2
+j  org.testng.internal.TestNGClassFinder.processClass(Lorg/testng/internal/ClassInfoMap;Ljava/util/Map;Lorg/testng/internal/IConfiguration;Ljava/lang/Class;)V+21
+j  org.testng.internal.TestNGClassFinder.<init>(Lorg/testng/internal/ClassInfoMap;Ljava/util/Map;Lorg/testng/internal/IConfiguration;Lorg/testng/ITestContext;Lorg/testng/DataProviderHolder;)V+127
+j  org.testng.TestRunner.initMethods()V+64
+j  org.testng.TestRunner.init()V+27
+j  org.testng.TestRunner.init(Lorg/testng/internal/IConfiguration;Lorg/testng/ISuite;Lorg/testng/xml/XmlTest;Ljava/lang/String;Lorg/testng/internal/annotations/IAnnotationFinder;ZLjava/util/Collection;Ljava/util/List;)V+332
+j  org.testng.TestRunner.<init>(Lorg/testng/internal/IConfiguration;Lorg/testng/ISuite;Lorg/testng/xml/XmlTest;Ljava/lang/String;Lorg/testng/internal/annotations/IAnnotationFinder;ZLjava/util/Collection;Ljava/util/List;Ljava/util/Comparator;Lorg/testng/DataProviderHolder;)V+342
+j  org.testng.SuiteRunner$DefaultTestRunnerFactory.newTestRunner(Lorg/testng/ISuite;Lorg/testng/xml/XmlTest;Ljava/util/Collection;Ljava/util/List;Lorg/testng/DataProviderHolder;)Lorg/testng/TestRunner;+50
+j  org.testng.SuiteRunner.init(Lorg/testng/internal/IConfiguration;Lorg/testng/xml/XmlSuite;Ljava/lang/String;Lorg/testng/ITestRunnerFactory;ZLjava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;Lorg/testng/DataProviderHolder;Ljava/util/Comparator;)V+348
+j  org.testng.SuiteRunner.<init>(Lorg/testng/internal/IConfiguration;Lorg/testng/xml/XmlSuite;Ljava/lang/String;Lorg/testng/ITestRunnerFactory;ZLjava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;Lorg/testng/DataProviderHolder;Ljava/util/Comparator;)V+150
+j  org.testng.TestNG.createSuiteRunner(Lorg/testng/xml/XmlSuite;)Lorg/testng/SuiteRunner;+90
+j  org.testng.TestNG.createSuiteRunners(Lorg/testng/internal/SuiteRunnerMap;Lorg/testng/xml/XmlSuite;)V+241
+j  org.testng.TestNG.runSuitesLocally()Ljava/util/List;+91
+j  org.testng.TestNG.runSuites()Ljava/util/List;+1
+j  org.testng.TestNG.run()V+25
+j  com.sun.javatest.regtest.agent.TestNGRunner.main(Ljava/lang/ClassLoader;[Ljava/lang/String;)V+315
+j  com.sun.javatest.regtest.agent.TestNGRunner.main([Ljava/lang/String;)V+2
+j  java.lang.invoke.LambdaForm$DMH+0x0000007801042000.invokeStatic(Ljava/lang/Object;Ljava/lang/Object;)V+10 java.base@26-ea
+j  java.lang.invoke.LambdaForm$MH+0x0000007801043400.invoke(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;+33 java.base@26-ea
+j  java.lang.invoke.Invokers$Holder.invokeExact_MT(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;+20 java.base@26-ea
+j  jdk.internal.reflect.DirectMethodHandleAccessor.invokeImpl(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+55 java.base@26-ea
+j  jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+23 java.base@26-ea
+j  java.lang.reflect.Method.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+102 java.base@26-ea
+j  com.sun.javatest.regtest.agent.MainWrapper$MainTask.run()V+134
+j  java.lang.Thread.runWith(Ljava/lang/Object;Ljava/lang/Runnable;)V+5 java.base@26-ea
+j  java.lang.Thread.run()V+19 java.base@26-ea
+v  ~StubRoutines::Stub Generator call_stub_stub 0x0000ffff9fb81454
+V  [libjvm.so+0x8ae318]  JavaCalls::call_helper(JavaValue*, methodHandle const&, JavaCallArguments*, JavaThread*)+0x248  (javaCalls.cpp:415)
+V  [libjvm.so+0x8af9a4]  JavaCalls::call_virtual(JavaValue*, Handle, Klass*, Symbol*, Symbol*, JavaThread*)+0x174  (javaCalls.cpp:323)
+V  [libjvm.so+0x988b0c]  thread_entry(JavaThread*, JavaThread*)+0x8c  (jvm.cpp:2735)
+V  [libjvm.so+0x8c7f48]  JavaThread::thread_main_inner() [clone .part.0]+0xa4  (javaThread.cpp:775)
+V  [libjvm.so+0xe4fda8]  Thread::call_run()+0xa8  (thread.cpp:243)
+V  [libjvm.so+0xc90728]  thread_native_entry(Thread*)+0xd8  (os_linux.cpp:868)
+C  [libpthread.so.0+0x7950]  start_thread+0x190
+Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
+j  java.util.stream.StreamSupport.intStream(Ljava/util/Spliterator$OfInt;Z)Ljava/util/stream/IntStream;+0 java.base@26-ea
+j  java.util.Arrays.stream([III)Ljava/util/stream/IntStream;+7 java.base@26-ea
+j  java.util.Arrays.stream([I)Ljava/util/stream/IntStream;+4 java.base@26-ea
+j  org.testng.internal.collections.Ints.asList([I)Ljava/util/List;+1
+j  org.testng.internal.annotations.JDK15TagFactory.createDataProviderTag(Ljava/lang/reflect/Method;Ljava/lang/annotation/Annotation;)Lorg/testng/annotations/IAnnotation;+68
+j  org.testng.internal.annotations.JDK15TagFactory.createTag(Ljava/lang/Class;Ljava/lang/reflect/Method;Ljava/lang/annotation/Annotation;Ljava/lang/Class;)Lorg/testng/annotations/IAnnotation;+17
+j  org.testng.internal.annotations.JDK15AnnotationFinder.lambda$findAnnotation$0(Ljava/lang/Class;Ljava/lang/reflect/Method;Ljava/lang/annotation/Annotation;Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/reflect/Constructor;Ljava/lang/Class;Lorg/testng/internal/collections/Pair;)Lorg/testng/annotations/IAnnotation;+9
+j  org.testng.internal.annotations.JDK15AnnotationFinder$$Lambda+0x0000007801052c78.apply(Ljava/lang/Object;)Ljava/lang/Object;+36
+J 722 c1 java.util.concurrent.ConcurrentHashMap.computeIfAbsent(Ljava/lang/Object;Ljava/util/function/Function;)Ljava/lang/Object; java.base@26-ea (576 bytes) @ 0x0000ffff98814cdc [0x0000ffff98814700+0x00000000000005dc]
+j  org.testng.internal.annotations.JDK15AnnotationFinder.findAnnotation(Ljava/lang/Class;Ljava/lang/annotation/Annotation;Ljava/lang/Class;Ljava/lang/Class;Ljava/lang/reflect/Constructor;Ljava/lang/reflect/Method;Lorg/testng/internal/collections/Pair;Ljava/lang/Class;)Lorg/testng/annotations/IAnnotation;+29
+j  org.testng.internal.annotations.JDK15AnnotationFinder.findAnnotation(Ljava/lang/Class;Ljava/lang/reflect/Method;Ljava/lang/Class;)Lorg/testng/annotations/IAnnotation;+82
+j  org.testng.internal.TestNGClassFinder.isTestNGClass(Ljava/lang/Class;Lorg/testng/internal/annotations/IAnnotationFinder;)Z+81
+j  org.testng.internal.TestNGClassFinder.isNotTestNGClass(Ljava/lang/Class;Lorg/testng/internal/annotations/IAnnotationFinder;)Z+2
+j  org.testng.internal.TestNGClassFinder.processClass(Lorg/testng/internal/ClassInfoMap;Ljava/util/Map;Lorg/testng/internal/IConfiguration;Ljava/lang/Class;)V+21
+j  org.testng.internal.TestNGClassFinder.<init>(Lorg/testng/internal/ClassInfoMap;Ljava/util/Map;Lorg/testng/internal/IConfiguration;Lorg/testng/ITestContext;Lorg/testng/DataProviderHolder;)V+127
+j  org.testng.TestRunner.initMethods()V+64
+j  org.testng.TestRunner.init()V+27
+j  org.testng.TestRunner.init(Lorg/testng/internal/IConfiguration;Lorg/testng/ISuite;Lorg/testng/xml/XmlTest;Ljava/lang/String;Lorg/testng/internal/annotations/IAnnotationFinder;ZLjava/util/Collection;Ljava/util/List;)V+332
+j  org.testng.TestRunner.<init>(Lorg/testng/internal/IConfiguration;Lorg/testng/ISuite;Lorg/testng/xml/XmlTest;Ljava/lang/String;Lorg/testng/internal/annotations/IAnnotationFinder;ZLjava/util/Collection;Ljava/util/List;Ljava/util/Comparator;Lorg/testng/DataProviderHolder;)V+342
+j  org.testng.SuiteRunner$DefaultTestRunnerFactory.newTestRunner(Lorg/testng/ISuite;Lorg/testng/xml/XmlTest;Ljava/util/Collection;Ljava/util/List;Lorg/testng/DataProviderHolder;)Lorg/testng/TestRunner;+50
+j  org.testng.SuiteRunner.init(Lorg/testng/internal/IConfiguration;Lorg/testng/xml/XmlSuite;Ljava/lang/String;Lorg/testng/ITestRunnerFactory;ZLjava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;Lorg/testng/DataProviderHolder;Ljava/util/Comparator;)V+348
+j  org.testng.SuiteRunner.<init>(Lorg/testng/internal/IConfiguration;Lorg/testng/xml/XmlSuite;Ljava/lang/String;Lorg/testng/ITestRunnerFactory;ZLjava/util/List;Ljava/util/Collection;Ljava/util/Collection;Ljava/util/Collection;Lorg/testng/DataProviderHolder;Ljava/util/Comparator;)V+150
+j  org.testng.TestNG.createSuiteRunner(Lorg/testng/xml/XmlSuite;)Lorg/testng/SuiteRunner;+90
+j  org.testng.TestNG.createSuiteRunners(Lorg/testng/internal/SuiteRunnerMap;Lorg/testng/xml/XmlSuite;)V+241
+j  org.testng.TestNG.runSuitesLocally()Ljava/util/List;+91
+j  org.testng.TestNG.runSuites()Ljava/util/List;+1
+j  org.testng.TestNG.run()V+25
+j  com.sun.javatest.regtest.agent.TestNGRunner.main(Ljava/lang/ClassLoader;[Ljava/lang/String;)V+315
+j  com.sun.javatest.regtest.agent.TestNGRunner.main([Ljava/lang/String;)V+2
+j  java.lang.invoke.LambdaForm$DMH+0x0000007801042000.invokeStatic(Ljava/lang/Object;Ljava/lang/Object;)V+10 java.base@26-ea
+j  java.lang.invoke.LambdaForm$MH+0x0000007801043400.invoke(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;+33 java.base@26-ea
+j  java.lang.invoke.Invokers$Holder.invokeExact_MT(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;+20 java.base@26-ea
+j  jdk.internal.reflect.DirectMethodHandleAccessor.invokeImpl(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+55 java.base@26-ea
+j  jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+23 java.base@26-ea
+j  java.lang.reflect.Method.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object;+102 java.base@26-ea
+j  com.sun.javatest.regtest.agent.MainWrapper$MainTask.run()V+134
+j  java.lang.Thread.runWith(Ljava/lang/Object;Ljava/lang/Runnable;)V+5 java.base@26-ea
+j  java.lang.Thread.run()V+19 java.base@26-ea
+v  ~StubRoutines::Stub Generator call_stub_stub 0x0000ffff9fb81454
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 1 (SEGV_MAPERR), si_addr: 0x0000000000000050
+";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;aarch64;;;;;;;;linux;;;;;;;;;;;;"0|i3cw37:";9223372036854775807;;;runtime;;;;;;;"2025-08-26 08:52;mwthomps;ILW=HLM=P3;;;";;;;;;;;;;;;;;;;;;;;;;
+Regression on Pet Clinic app with Compact Object Headers;JDK-8365493;5168322;Bug;Open;JDK;JDK;software;duke;;;P3;;fbredberg;huntch;huntch;2025-08-13 06:36;2026-01-21 13:45;2026-02-09 16:43;;26;;27;hotspot;;0;amazon-interest;lilliput;;;;"Observing a regression in requests / second on Spring Pet Clinic app when loading testing with oha (HTTP load generator).
+Regression ranges from 8% - 10% when running oha remote from the Pet Clinic app, (oha on one machine, Pet Clinic app on remote machine — full network stack).  The regression is much larger (~ 30%) when running both oha and Pet Clinic on the same machine but isolating each in processor id sets using numactl.
+
+Steps to reproduce:
+1.) Grab a copy of Spring Pet Clinic (https://github.com/spring-projects/spring-petclinic). Follow instructions to build it. Instructions on how to launch Pet Clinic can also be found at previously mentioned download URL.
+
+2.) Grab a copy of oha, a http load generator, (https://sourceforge.net/projects/oha.mirror/)
+
+3.) Start Pet Clinic. The following command line was used to test with +UseCompactObjectHeaders on a 16 core AMD Rome machine running Linux:
+$  JAVA=$HOME/jdks/jdk-26-b10/bin/java
+$  numactl --physcpubind 8-15,24-31 ${JAVA} -Xmx16g -Xms16g -Xmn12g -XX:MetaspaceSize=128m -XX:ReservedCodeCacheSize=256m -XX:+UseParallelGC -Xlog:gc*:file=/tmp/coh-parallel-petclinic-gc.log -XX:+UseTransparentHugePages -XX:+AlwaysPreTouch -XX:-UseCompactObjectHeaders -jar ./target/spring-petclinic-3.5.0-SNAPSHOT.jar
+* Note, you may have to adjust the range of processor ids for the machine you are running on.
+For a baseline test without compact object headers, change -XX:+UseCompactObjectHeaders to -XX:-UseCompactObjectHeaders
+
+4.) Start the http load generator oha with the following command line:
+$ OHA=<path to the oha http load generator>
+$ numactl --physcpubind=1-7,17-23 ${OHA} -n 500000 --no-tui http://localhost:8080/vets.html
+* Note: you may need to adjust the range of processor ids for the machine you are running on.
+
+The oha http load generator will report statistics when it finishes. In its “Summary” section the last line is “Requests/sec:”
+
+Averaging 5 runs with -UseCompactObjectHeaders, the system under test does 1086 requests / second.
+Averaging 5 runs with +UseCompactObjectHeaders, the system under test does 688 requests / second.";"System under test:
+16 core AMD Rome, 128 GB RAM, Linux OS, JDK version 26 build 10.
+
+Test was also run in a configuration with Pet Clinic on 16 core AMD Rome, 128 GB RAM, Linux OS, JDK version 26 build 10, and oha http load generator running on a Mac OS M1 desktop with 32 GB RAM. Regression observed in this configuration using the same command line options, 8% - 10%.
+
+Similar observation with G1. Did not run tests with Serial or ZGC.";;;;;;;;;;;;JDK-8360700;;;;;;;;;;JDK-8366042;JDK-8376037;JDK-8370848;JDK-8373595;"2025-10-03 07:38;aartemov;OMCache size vs performance.png;https://bugs.openjdk.org/secure/attachment/116422/OMCache+size+vs+performance.png";"2025-10-07 02:39;aartemov;OMs cache access and lock counters.png;https://bugs.openjdk.org/secure/attachment/116436/OMs+cache+access+and+lock+counters.png";"2025-10-01 08:14;aartemov;scaling.png;https://bugs.openjdk.org/secure/attachment/116404/scaling.png";"2025-08-13 07:09;huntch;spring-petclinic-profile.png;https://bugs.openjdk.org/secure/attachment/115800/spring-petclinic-profile.png";x86_64;;;;;;;25;linux;;;;;;;;;;;;"0|i3ct2j:";9223372036854775807;;;runtime;;;;;;;"2025-08-13 07:12;huntch;Attached a screenshot of gprofng profiles of a baseline and coh which suggests the regression is related to locking / monitors with +COH.;;;";"2025-08-18 11:47;rkennke;Today I tried to reproduce the issue, I tried it on a Xeon and a Graviton machine, in both cases I could not observe any regression. For example, averaging over 5 runs on Xeon, I got 724 r/s without COH and 720 r/s with COH.
+
+It seems likely that the underlying issue is similar to JDK-8339114. When experimenting with that, we could only see the regression on (oldish) AMD processors, not on Intels and not on ARMs. And it was caused by the object monitor tables that compact object headers also enable (i.e. not directly caused by smaller headers, but by the new implementation of heavyweight object locking).
+
+Tomorrow I will try to get my hands on a machine with AMD Rome or similar generation processor and see if I can reproduce there.;;;";"2025-08-19 10:16;rkennke;I've been able to reproduce the regression on an older AMD processor (AWS instance type m5a).
+
+Baseline: 1396 r/s
++COH: 1064 r/s
+
+That looks like a ~30% regression.
+
+In-fact, I have been able to reproduce this without compact headers by only enabling object-monitor-table (-XX:+UseObjectMonitorTable). This mirrors our earlier finding that OMT performs somewhat badly on older AMD processors, and we currently don't have a good explanation for it. That regression doesn't happen on Intel, ARM and newer AMD processors.
+
+Maybe [~coleenp] or [~aboldtch] have more ideas? Axel has implemented it, Coleen knows a lot about it, too, and has experimented with its performance as well.;;;";"2025-08-21 04:06;rkennke;This is a perf profile of a regression run:
+
+   8.05%  http-nio-8080-e  libjvm.so             [.] ObjectMonitor::try_spin
+   6.08%  http-nio-8080-e  libjvm.so             [.] ObjectMonitor::try_lock
+   5.59%  http-nio-8080-e  libjvm.so             [.] LightweightSynchronizer::get_or_insert_monitor_from_table
+   3.27%  http-nio-8080-e  libjvm.so             [.] LightweightSynchronizer::enter
+   2.12%  http-nio-8080-e  libjvm.so             [.] LightweightSynchronizer::inflate_and_enter
+   2.01%  http-nio-8080-e  libjvm.so             [.] SharedRuntime::complete_monitor_locking_C
+   1.15%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7be54bd3
+   1.12%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7bf92c85
+   1.05%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7b6d58ca
+   1.04%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7bb70e86
+   0.80%  http-nio-8080-e  libjvm.so             [.] LightweightSynchronizer::fast_lock_spin_enter
+   0.76%  http-nio-8080-e  libjvm.so             [.] AccessInternal::PostRuntimeDispatch<CardTableBarrierSet::AccessBarrier<594020ul, CardTableBarrierSet>, (AccessInterna
+   0.53%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7be54f09
+   0.53%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7b656b32
+   0.50%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7be54338
+   0.50%  http-nio-8080-e  [JIT] tid 92363       [.] 0x00007fdd7ba53e9b
+   0.50%  http-nio-8080-e  libjvm.so             [.] ObjectMonitor::spin_enter
+   0.50%  http-nio-8080-e  libjvm.so             [.] ObjectSynchronizer::FastHashCode
+   0.45%  http-nio-8080-e  libjvm.so             [.] LightweightSynchronizer::get_or_insert_monitor
+
+
+and for comparison a profile from the exact same run on an unaffected x86 machine:
+
+  22.40%  http-nio-8080-e  libjvm.so             [.] ObjectMonitor::try_lock
+  16.19%  http-nio-8080-e  libjvm.so             [.] ObjectMonitor::try_spin
+   3.12%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567ead5c8
+   3.00%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567ead265
+   2.81%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567b18a85
+   2.79%  http-nio-8080-e  libjvm.so             [.] SpinPause
+   2.76%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567b18ddd
+   2.53%  http-nio-8080-e  libjvm.so             [.] ObjectMonitor::spin_enter
+   2.12%  http-nio-8080-e  libjvm.so             [.] LightweightSynchronizer::inflate_and_enter
+   2.06%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f25676df9ca
+   1.73%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567b96004
+   1.33%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567b1ffe0
+   1.00%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567ead5d0
+   0.98%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567b18d5f
+   0.87%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567b18de5
+   0.82%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567ead5b8
+   0.59%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f25676576d5
+   0.50%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567b18dcd
+   0.43%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f25676528f1
+   0.39%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f25676573df
+   0.31%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f256765754c
+   0.29%  http-nio-8080-e  libjvm.so             [.] SharedRuntime::complete_monitor_locking_C
+   0.28%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f25676577ac
+   0.28%  http-nio-8080-e  [JIT] tid 2410295     [.] 0x00007f2567657632
+   0.25%  http-nio-8080-e  libjvm.so             [.] ObjectMonitor::enter_with_contention_mark
+
+The cmd line in both scenarios was:
+${JAVA} -Xmx16g -Xms16g -Xmn12g -XX:MetaspaceSize=128m -XX:ReservedCodeCacheSize=256m -XX:+UseParallelGC '-Xlog:gc*:file=/tmp/coh-parallel-petclinic-gc.log' -XX:+UseTransparentHugePages -XX:+AlwaysPreTouch -XX:-UseCompactObjectHeaders -XX:+UnlockDiagnosticVMOptions -XX:+UseObjectMonitorTable -jar ./target/spring-petclinic-3.5.0-SNAPSHOT.jar
+
+What sticks out is that complete_monitor_locking_C is quite a bit less heavy, and that the OMT stuff (LightweightSynchronizer::get_or_insert_monitor_from_table) seems absent from the non-affected run, even though it is also using OMT.;;;";"2025-09-04 03:51;aartemov;I am able to reproduce on AMD EPYC ROME machine from OCI. The numbers I observe after a single run (not scientific, but still):
+-UseCompactObjectHeaders 1561.4794 requests/sec
++UseCompactObjectHeaders 1273.1161 requests/sec ;;;";"2025-09-05 07:40;aartemov;We were able to reproduce the problem on two Intel machines, one with a Linux being a guest OS inside of VirtualBox, another one with ""native"" installation. The regression is around 30%. 
+
+We also reproduced it on Apple M3 Pro equipped laptop, there the regression is around 40%. Note that numactl is not available, as far as I know, on MacOS. 
+
+We tend to think that that problem is not AMD - specific.
+;;;";"2025-09-19 07:01;aartemov;Here is what me and [~fbredberg] have found on the issue. 
+
+First, we profiled the code with gpofng. The major difference is in the time spent in ObjectMonitor::try_lock(). The hierarchy of calls suggested
+also that something is happening in C2 emitted code:
+try_lock() 								<-
+try_enter() 								<-
+LightweightSynchronizer::inflate_and_enter() 	<-
+LightweightSynchronizer::enter() 				<-
+SharedRuntime::monitor_enter_helper() 		<-
+SharedRuntime::complete_monitor_locking_C() 	<-
+C2 Runtime complete_monitor_locking_blob
+
+Gprofng is a sampler, it does not provide any counters. We had to add those ourselves in the runtime code.
+Without OMT (object monitor table): 			1.1x10e9 calls to complete_monitor_locking_C()
+With OMT 								2.4x10e9 calls to complete_monitor_locking_C().
+
+This means that the the slow path is taken appox 2.18 times more often when one uses OMT.
+We also added counters to measure how many time a thread was parked, the results are negligible compared to the overall load. 
+The next step was to study what is happening in the C2 emitted code. We added 11 counters in C2_MacroAssembler::fast_lock_lightweight(). 
+The results are presented in the tables below:
+
+-= WITHOUT OBJECT MONITOR TABLE =-
+
+-XX:+UnlockDiagnosticVMOptions -XX:-UseObjectMonitorTable
+
+            nCalls	     %  counter     label		         explanation
+=========================================================
+12616092809 100%  XYZ_0:     entry                      (Calls to fast_lock_lightweight)
+  6027954426   47%  XYZ_1:     fast_path               (Not locked when we entered fast_lock_lightweight, go fast-path)
+  6030862583   47%  XYZ_2:     push                      (Same as p1 but with recursive locking as well, p2-p1: 2908157 recursive locks)
+  6589215079   52%  XYZ_3:     inflated                  (Number of times an inflated monitor was found)
+                    0     0%  XYZ_4:     monitor_found       (Label not used)
+  5525186608   43%  XYZ_5:     monitor_locked     (Sucessfully locked an inflated monitor found in the mark word, go fast-path)
+                  38     0%  XYZ_6:     slow_path_0         (Lock-stack is full, go slow-path)
+	      8336     0%  XYZ_7:     slow_path_1         (Already locked when entering fast_lock_lightweight, go slow-path)
+		    0     0%  XYZ_8:     slow_path_2         (Label not used)
+  1118166433     8%  XYZ_9:      slow_path_3         (Failed to lock the inflated monitor found in the mark word, go slow-path)
+10979600557   87%  XYZ_10:   locked                   (Sucessfull fast-path returns 87% => 13% returns slow-path)
+
+Resulted in slow-path: 1636492252 = approx 1.6x10e9 = approx 9% of all calls. 
+Number of complete_monitor_locking_C() calls at runtime: approx 1.1x10e9
+Corresponding number of try_enter() calls at runtime: 1274712298 = approx 1.2x10e9
+Sucess rate without going to the runtime is 87%. Percents do not sum up to 100 because the counters were not atomic, i.e. the are underestimations.  
+
+We can have more insights from the the table (OMT off):
+1) Less than a half of calls result in fast locking (i.e. with locking bits).
+2) The OM is in the markword, one can think of it as of a cache with a hit rate of 1.
+3) The overall efficiency of inflated locking is 1 * 0.83 = 0.83.
+
+Same measurements with OMT on:
+
+                   -= USE OBJECT MONITOR TABLE =-
+
+-XX:+UnlockDiagnosticVMOptions -XX:+UseObjectMonitorTable
+           nCalls	     % counter    label		   explanation
+=========================================================
+12693895823 100%  XYZ_0:   entry                   (Calls to fast_lock_lightweight)
+  7421395388   58%  XYZ_1:   fast_path            (Not locked when entering fast_lock_lightweight, we got it, go fast-path)
+  7374712402   58%  XYZ_2:   push                   (Same as p1 but with recursive locking as well, p1-p2: 46682986 recursive locks)
+  5306447455   41%  XYZ_3:   inflated               (Number of times an inflated monitor was found)
+  3878538243   30%  XYZ_4:   monitor_found    (Number of times the monitor was found in the OMT-cache)
+  3025048955   23%  XYZ_5:   monitor_locked  (Successfully locked a monitor found in the OMT-cache, go fast-path)
+		  46     0%  XYZ_6:   slow_path_0      (Lock-stack is full, go slow-path)
+        9663155     0%  XYZ_7:   slow_path_1      (Locked by someone else when we entered fast_lock_lightweight, go slow-path)
+  1478786346   11%  XYZ_8:   slow_path_2      (Failed to find the monitor in the OMT-cache, go slow-path)
+    908060162     7%  XYZ_9:   slow_path_3      (Failed to lock the monitor found in the OMT-cache, go slow-path)
+10010005726   78%  XYZ_10: locked                (Sucessfull fast-path returns 78% => 22% returns slow-path)
+
+Resulted in slow-path: 2396509709 = approx 2.3 x 10^9 = approx 19%
+Number of complete_monitor_locking_C calls at runtime: approx 2.3 x 10^9
+Corresponding number of try_enter calls at runtime: 2697708213 = approx 2.7 x 10^9
+Sucess rate without going to the runtime is 78%. Percents do not sum up to 100 because the counters were not atomic, i.e. the are underestimations.  
+
+We can have more insights from the the table (OMT on):
+1) Fast locking (i.e. with bits in the markword) is more successfull with OMT is on. This is effect of spinning (see below).
+2) XYZ_4 / XYZ_3 = approx 0.75, i.e. thread-local OM cache hit rate is about 75%.
+3) XYZ_5 / XYZ_4 = approx 0.77, out of found-in-cache OMs, only 77% were successfully locked. 
+4) The combined ""efficiency"" of inflated locking is 0.75 * 0.77 = 0.57.
+
+One would probably like to minimize the number of slow-path takes. We tried to fiddle around with the size of the thread-local OM cache, but it does not seem to have 
+a noticeable effect on the cache hit rate. 
+
+Another available impact point is a diagnostic option LightweightFastLockingSpins, which, as stated in the option description
+""Specifies the number of times lightweight fast locking will attempt to CAS the markWord before inflating. Between each CAS it will spin for exponentially more time, resulting in a total number of spins on the order of O(2^value)""
+
+Practically this means that low values provide less fast locking, but instead proper OMs are inflated and OM locking is performed. This is preferable with high contention, as with proper OMs one can avoid wasting resources while spinning, but instead part a thread which could not enter the OM and do something useful. High values provide more fast locking and fewer proper OM will be infalted and used as a result. 
+
+We observed that higher value of LightweightFastLockingSpins increases the numbers of successful fast locks (i.e. bits only) in the C2 emitted code, reduces the number of inflated lockings. However, with a price of higher CPU consumption. Below are the results from measurements done in a not-strictly scientific way on an OCI machine.
+
+    Value				              Performance (Requests/sec)
+===============================================
+OMT off								 1502.4774	
+	  1								 1164.5188
+	  3								 1165.7632
+	  5								 1121.2268	
+	  7								 1167.0685
+	  9								 1220.5972
+	 11								 1171.9015
+	 13 (default)					         1117.1044
+	 15								 1165.2829
+	 17								 1135.5648
+	 19								 1157.5625
+	 21								 1173.9941
+	 23								 1177.0004
+
+No significant impact observed on performance. This could probably be explained with the fact that low LightweightFastLockingSpins volumes imply more OMs inflated, but getting them in/out of the OM table is not for free. It probably balances out any possible gains from having proper OMs. 
+
+[~eosterlund] suggested disabling spinning before inflation, effectively setting LightweightFastLockingSpins to 0. This would inflate the monitor sooner, just after the 1st failed fast locking attempt. This is suitable for scenario with high contention. In this case, resoures are not spent on spinning, but rather an OM is inflated asap and a thread can be parked when needed. Regression is preserved in this case. So it looks like spinning has little to no effect on performance for this scenario with OMT on.
+
+Conclusion so far: we have not found a single reason for the performance regression.
+
+Things to check:
+1) Is it really the number of slow-path walks out of C2 emitted code which determines the performance? 
+2) If it is, can we increase the overall success rate of inflated locking there? Currently success_rate = cache_hit_rate * single_OM_lock_sucess_rate = 0.75 * 0.77 = 0.57. We 
+do not have controll over the 1st multiplier, can we increase the 2nd? In case without OMT, that rate is 0.83. Can we make it even higher? Obviously, we cant have 0.75 * X > 0.83 since X <= 1, but maximizing X (single_OM_lock_sucess_rate) may be doable.
+
+* Tables look nice when I edit them, but not so nice when get published, sorry.;;;";"2025-10-01 08:15;aartemov;I added a table with scaling with problem size.;;;";"2025-10-03 07:37;aartemov;An update on the issue:
+
+As described before, we think that the issue can be mitigated by minimizing the number of slow path walks in the C2 emitted code. One more or less obvious solution is to increase the object monitor cache size (per thread). The default capacity is 8. 
+
+I experimented a bit with really large values (up to 1024), and was able to reduce the regression from around 25% to just 8%. The results for runs made on my OCI instance are attached.
+
+One observation: when experimenting on my own laptop with a Linux running inside of Virtual Box, I was able to exceed the performance of the default case (i.e. OMT off) with large enough object monitor cache. ;;;";"2025-10-07 02:39;aartemov;An update:
+
+we instrumented the code with more counters in order to find out the distributions of object monitor accesses through the cache and lock counts (i.e. how many times an inflated monitor has been successfully entered). The results are presented in the screenshots attached. 
+
+The conclusion is that the vast majority (ca 60% of all OMs) have more than 1e6 accesses via cache and more than 1e6 lock events throughout their lifetime. From the numbers we cannot conclude if these groups are the same in terms of population, but it is likely to be so. 
+
+We think that the only solution for the problem is to increase the OMCache capacity to a large value. ;;;";"2025-10-10 14:39;dcubed;The old ObjectMonitor system used to keep a cache of up to 1024 ObjectMonitor attached
+to each thread along with the global ObjectMonitor lists. It's interesting that 1024 ObjectMonitors
+being thread-local has popped up again.;;;";"2025-10-13 04:00;rkennke;Note that I am no longer working for Amazon, and I am not sure if I will be able to spend a lot of time on this issue (or OpenJDK for that matter) in the future.
+
+Does that mean that the application juggles ~1024 locks *and* actually uses them (as opposed to throwaway locks like single-threaded use of StringBuffer) *and* reaches significant contention on them (or why else would they all be inflated?). Also, why does that lack-of-cache only show up on some hardware but not on other?
+
+If the solution is really to provide a thread-local cache of 1024 OMs, then we need to think hard about how to make it so that normal-behaving applications are not wasting 16KB per thread.
+
+Also, a cache of this size would perhaps benefit from a more clever lookup than a linear search (not sure what would be feasible to do in assembly, though).;;;";"2025-10-13 04:02;rkennke;Ramki, can you please look at this? I currently don't have time, and perhaps more importantly, don't have access to affected hardware.;;;";"2025-10-29 15:26;ysr;Thanks for the background, Roman; I'll take a look as soon as I get a few cycles, probably in the next two weeks.;;;";"2025-11-05 08:07;eosterlund;I couldn't help myself and have been messing around a bit with an alternative table implementation. Seems to fix the regression.;;;";"2025-11-18 14:23;phh;Hi, Eric. Can you share your alternative?
+;;;";"2025-11-18 14:44;eosterlund;[~phh] sure: https://github.com/openjdk/jdk/compare/master...fisk:jdk:better_monitor_table_v3?expand=1;;;";"2025-11-18 22:32;eosterlund;[~fbredberg] and [~aartemov] are having a look at productizing the proposed table.
+
+[~phh] if you like it, then one missing ingredient which would be super helpful to get, is the right Shenandoah barriers. We are peeking at the object WeakHandle from the C2 generated assembly code. I added a function on the barrier set assembler to try resolving the WeakHandle if convenient and otherwise jump to a slow path, similar to how we peek at global jobject handles from fast JNI accessors. But yeah, missing Shenandoah support right now.
+
+Would you guys like to help out with that?;;;";"2025-11-19 07:39;phh;Yes, we would. And thanks for posting!;;;";"2025-12-01 02:44;rkennke;[~phh][~eosterlund] What is the status of this effort? I have a few cycles to burn on this - if there is anything I can help with right now then I could take it. I'm looking at the missing Shenandoah for now, unless you tell me that you already have something ready.;;;";"2025-12-01 05:11;rkennke;[~eosterlund] Find the missing Shenandoah parts here (last 2 commits): https://github.com/rkennke/jdk/tree/better_monitor_table_v3
+
+[~phh][~ysr][~wkemper][~kdnilsen] Can you please check if this looks correct? The one thing I am a little bit unsure about is if checking for WEAK_ROOTS=false is sufficient? We are propagating the GC state WEAK_ROOTS=false at the end of weak-roots processing using a handshake, I think it is safe to say that if we encounter WEAK_ROOTS=false in a Java thread, then we are guaranteed to not find any from-space refs in weak-roots (i.e. in weak handles), but please double-check my thinking and implementation.;;;";"2025-12-01 08:22;fbredberg;[~rkennke] Hi Roman.
+We (me and [~aartemov]) have taken over the new ObjectMonitorTable implementation from [~eosterlund] and I will look at your Shenandoah parts. Thank you for helping out on those parts.
+
+Current status is that Erik's new OMT seems to fix the Pet Clinic regression, however when we run broader tests we see another regression (-22%) in DaCapo-sunflow-large for AArch64 if we turn on CompactObjectHeaders.
+
+We will not integrate the new OMT before the upcoming fork, but probably soon after.
+
+If you have time to spare it would be nice if you could try to look into what is causing the Sunflow regression when turning on CompactObjectHeaders. It looks like -Xms2g might solve the sunflow regression, but why? We are still investigating.
+
+You'll find my draft PR (work in progress) with the new ObjectMonitorTable implementation here: https://github.com/openjdk/jdk/pull/28199;;;";"2025-12-01 08:26;rkennke;[~fbredberg] Nice, thank you for the update and for working on this! I can look into the dacapo-sunflow regression. Can you give me more information on how to reproduce it? I.e. you say -Xmx2g might fix it, but at which settings do you actually see it? And which version of DaCapo?;;;"
+Crash in javac: SIGSEGV in ObjectSynchronizer::enter;JDK-8371974;5176050;Bug;Open;JDK;JDK;software;duke;;;P3;;fbredberg;dholmes;dholmes;2025-11-16 20:34;2025-12-09 21:08;2026-02-09 16:43;;26;;tbd;hotspot;;0;sync;tier5;;;;"Test: vmTestbase/nsk/monitoring/stress/classload/unload001/TestDescription.java
+
+
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  SIGSEGV (0xb) at pc=0x0000ffff9550f24c, pid=1490339, tid=1490342
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0+25) (build 26-ea+25-2475)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (26-ea+25-2475, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, linux-aarch64)
+# Problematic frame:
+# V  [libjvm.so+0xe5c24c]  ObjectSynchronizer::enter(Handle, BasicLock*, JavaThread*)+0x4c
+#
+# Core dump will be written. Default location: Core dumps may be processed with ""/opt/core.sh %p"" (or dumping to /opt/mach5/mesos/work_dir/slaves/526fbd26-20de-495c-9a19-a04adc16f7d1-S26968/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/e6353eaa-0436-4b3a-99bd-8e3ea8ca8651/runs/c024929a-53f2-4ea0-bc92-f6534af8ab03/testoutput/test-support/jtreg_open_test_hotspot_jtreg_vmTestbase_nsk_monitoring/scratch/5/core.1490339)
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+Host: AArch64, 16 cores, 31G, Oracle Linux Server release 8.10
+Time: Fri Nov 14 15:59:53 2025 UTC elapsed time: 0.805430 seconds (0d 0h 0m 0s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x0000ffff9003e2b0):  JavaThread ""main""             [_thread_in_vm, id=1490342, stack(0x0000ffff943d3000,0x0000ffff945d1000) (2040K)]
+
+Stack: [0x0000ffff943d3000,0x0000ffff945d1000],  sp=0x0000ffff945ce5d0,  free space=2029k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.so+0xe5c24c]  ObjectSynchronizer::enter(Handle, BasicLock*, JavaThread*)+0x4c  (compressedKlass.inline.hpp:36)
+V  [libjvm.so+0xe5c940]  ObjectLocker::ObjectLocker(Handle, JavaThread*)+0x58  (synchronizer.cpp:476)
+Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)
+j  sun.nio.fs.UnixPath.toUri()Ljava/net/URI;+1 java.base@26-ea
+j  com.sun.tools.javac.file.PathFileObject$SimpleFileObject.toUri()Ljava/net/URI;+4 jdk.compiler@26-ea
+j  com.sun.tools.javac.file.PathFileObject.getSimpleName(Ljavax/tools/FileObject;)Ljava/lang/String;+1 jdk.compiler@26-ea
+j  com.sun.tools.javac.jvm.ClassWriter.writeClassFile(Ljava/io/OutputStream;Lcom/sun/tools/javac/code/Symbol$ClassSymbol;)V+782 jdk.compiler@26-ea
+j  com.sun.tools.javac.jvm.ClassWriter.writeClass(Lcom/sun/tools/javac/code/Symbol$ClassSymbol;)Ljavax/tools/JavaFileObject;+128 jdk.compiler@26-ea
+j  com.sun.tools.javac.main.JavaCompiler.genCode(Lcom/sun/tools/javac/comp/Env;Lcom/sun/tools/javac/tree/JCTree$JCClassDecl;)Ljavax/tools/JavaFileObject;+27 jdk.compiler@26-ea
+j  com.sun.tools.javac.main.JavaCompiler.generate(Ljava/util/Queue;Ljava/util/Queue;)V+278 jdk.compiler@26-ea
+j  com.sun.tools.javac.main.JavaCompiler.generate(Ljava/util/Queue;)V+3 jdk.compiler@26-ea
+j  com.sun.tools.javac.main.JavaCompiler.compile(Ljava/util/Collection;Ljava/util/Collection;Ljava/lang/Iterable;Ljava/util/Collection;)V+417 jdk.compiler@26-ea
+j  com.sun.tools.javac.main.Main.compile([Ljava/lang/String;Lcom/sun/tools/javac/util/Context;)Lcom/sun/tools/javac/main/Main$Result;+622 jdk.compiler@26-ea
+j  com.sun.tools.javac.main.Main.compile([Ljava/lang/String;)Lcom/sun/tools/javac/main/Main$Result;+15 jdk.compiler@26-ea
+j  com.sun.tools.javac.Main.compile([Ljava/lang/String;)I+12 jdk.compiler@26-ea
+j  com.sun.tools.javac.Main.main([Ljava/lang/String;)V+1 jdk.compiler@26-ea
+v  ~StubRoutines::Stub Generator call_stub_stub 0x0000ffff7f825454
+
+siginfo: si_signo: 11 (SIGSEGV), si_code: 1 (SEGV_MAPERR), si_addr: 0x0061667265746e71
+";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;aarch64;;;;;;;;linux;;;;;;;;;;;;"0|i3e2nn:";9223372036854775807;;;runtime;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+NMT corruption: header canary broken as part of CodeBlob::purge();JDK-8361382;5163622;Bug;Open;JDK;JDK;software;duke;;;P3;;jsjolen;mgronlun;mgronlun;2025-07-03 14:55;2026-01-28 11:03;2026-02-09 16:43;;26;;27;hotspot;;0;classloading;;;;;"# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (mallocHeader.inline.hpp:107), pid=11743, tid=21251
+#  fatal error: NMT corruption: Block at 0x000060000133bfd0: header canary broken
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0) (build 26-internal-2025-07-03-1607476.markus.gronlund.jdkcopy3)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (26-internal-2025-07-03-1607476.markus.gronlund.jdkcopy3, mixed mode, tiered, compressed oops, compressed class ptrs, serial gc, bsd-amd64)
+# Core dump will be written. Default location: core.11743
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x00007f8fa3038c10):  VMThread ""VM Thread""          [id=21251, stack(0x000070000fb6f000,0x000070000fc6f000) (1024K)]
+
+Stack: [0x000070000fb6f000,0x000070000fc6f000],  sp=0x000070000fc6de50,  free space=1019k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.dylib+0xbf1c8c]  VMError::report(outputStream*, bool)+0xa9c  (mallocHeader.inline.hpp:107)
+V  [libjvm.dylib+0xbf5d25]  VMError::report_and_die(int, char const*, char const*, __va_list_tag*, Thread*, unsigned char*, void const*, void const*, char const*, int, unsigned long)+0x575
+V  [libjvm.dylib+0x404e20]  DebuggingContext::~DebuggingContext()+0x0
+V  [libjvm.dylib+0x8f770f]  MallocHeader* MallocHeader::resolve_checked_impl<void*, MallocHeader*>(void*)+0x15f
+V  [libjvm.dylib+0x8f720c]  MallocTracker::record_free_block(void*)+0xc
+V  [libjvm.dylib+0x9a719a]  os::free(void*)+0xea
+V  [libjvm.dylib+0x388fb4]  CodeBlob::purge()+0x44
+V  [libjvm.dylib+0x978e98]  nmethod::purge(bool)+0x308
+V  [libjvm.dylib+0x380439]  ClassUnloadingContext::purge_nmethods()+0x69
+V  [libjvm.dylib+0xa4d75d]  SerialFullGC::phase1_mark(bool)+0x8ad
+V  [libjvm.dylib+0xa4e8d1]  SerialFullGC::invoke_at_safepoint(bool)+0xe1
+V  [libjvm.dylib+0xa56a79]  SerialHeap::do_full_collection(bool)+0x369
+V  [libjvm.dylib+0xa5b4e0]  VM_SerialGCCollect::doit()+0x30
+V  [libjvm.dylib+0xbfc257]  VM_Operation::evaluate()+0xd7
+V  [libjvm.dylib+0xc11dcc]  VMThread::evaluate_operation(VM_Operation*)+0xac
+V  [libjvm.dylib+0xc125d7]  VMThread::inner_execute(VM_Operation*)+0x297
+V  [libjvm.dylib+0xc11add]  VMThread::run()+0xbd
+V  [libjvm.dylib+0xb791c8]  Thread::call_run()+0xa8
+V  [libjvm.dylib+0x9acccf]  thread_native_entry(Thread*)+0x10f
+C  [libsystem_pthread.dylib+0x6202]  _pthread_start+0x63
+C  [libsystem_pthread.dylib+0x1bab]  thread_start+0xf
+VM_Operation (0x00007000105090a8): SerialGCCollect, mode: safepoint, requested by thread 0x00007f8fa101e210
+";;;;;;;;;;;;;;;JDK-8352112;JDK-8364153;JDK-8369022;;;;;;;;;;"2026-01-27 15:27;epavlova;hs_err_pid17388.log;https://bugs.openjdk.org/secure/attachment/118466/hs_err_pid17388.log";;;;x86_64;;;;;;;;os_x;;;;;;;;;;;;"0|i3c11n:";9223372036854775807;;;runtime;;;;;;;"2025-07-08 11:12;mwthomps;ILW=HLM=P3;;;";"2025-07-09 22:13;thartmann;Isn't this another duplicate of JDK-8360048?;;;";"2025-07-28 00:38;jsjolen;Hi,
+
+I'd like to make it clear that a NMT header corruption is *not* an indication of a bug in NMT. Header corruption indicates that you have a bug in your code, In  JDK-8360048, NMT had a bug in its code, and the header corruption crash helped show us that this occurs. This crash indicates a bug in CodeBlob. A 'header corruption' can indicate an issue such as a double-free. I'm removing the relates-to.;;;";"2025-07-28 01:36;jsjolen;Isn't this a x64 machine?
+Host: ""Macmini8,1"" x86_64 3200 MHz, 12 cores, 32G, Darwin 23.2.0, macOS 14.2 (23C64)
+;;;";"2025-07-28 16:59;kvn;Before crash output has next lines:
+
+2025-07-03T21:32:11,778Z] [708.577s][error][jvmti     ] Posting Resource Exhausted event: Requested array size exceeds VM limit
+[2025-07-03T21:32:11,778Z] [711.725s][info ][gc        ] GC(1871) Pause Young (Allocation Failure) 4924M->4387M(5763M) 45.309ms
+[2025-07-03T21:32:11,778Z] [756.385s][error][jvmti     ] Posting Resource Exhausted event: Requested array size exceeds VM limit
+[2025-07-03T21:32:11,778Z] #
+[2025-07-03T21:32:11,778Z] # A fatal error has been detected by the Java Runtime Environment:
+[2025-07-03T21:32:11,778Z] #
+[2025-07-03T21:32:11,778Z] #  Internal Error (mallocHeader.inline.hpp:107), pid=11743, tid=21251
+[2025-07-03T21:32:11,778Z] #  fatal error: NMT corruption: Block at 0x000060000133bfd0: header canary broken
+;;;";"2025-07-28 17:35;kvn;Based on hs_err file info in JDK-8364153, 0x000060000133bfd0 could be valid C heap address.
+
+So it is not double free. something stomped over header of this memory block.
+
+We had before bugs with such stomp - JDK-8358289
+
+Would be interesting to know what was allocated before this memory block.;;;";"2025-07-28 17:44;kvn;Here is memory block from log:
+
+NMT Block at 0x000060000133bfc0, corruption at: 0x000060000133bfc0: 
+0x000060000133bf40:   40 bf 51 45 17 69 00 00 f1 00 00 00 00 00 00 00   @.QE.i..........
+0x000060000133bf50:   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0x000060000133bf60:   00 00 08 80 00 00 00 00 c8 c4 44 51 f8 7f 00 00   ..........DQ....
+0x000060000133bf70:   00 00 00 00 00 00 00 00 e0 b4 fd 51 f8 7f 00 00   ...........Q....
+0x000060000133bf80:   80 bf 51 45 17 69 00 00 fb 07 00 00 00 00 00 00   ..QE.i..........
+0x000060000133bf90:   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00   ................
+0x000060000133bfa0:   08 00 00 00 00 00 00 00 01 00 b4 00 04 00 9e e9   ................
+0x000060000133bfb0:   00 00 00 00 08 00 00 00 e8 8e 00 00 00 00 00 00   ................
+0x000060000133bfc0:   d0 31 9f 4e f8 7f 00 00 05 00 00 00 01 00 00 00   .1.N............
+0x000060000133bfd0:   74 61 64 6d 00 00 00 00 00 00 00 00 00 00 00 00   tadm............
+0x000060000133bfe0:   68 32 9f 4e f8 7f 00 00 06 00 00 00 02 00 00 00   h2.N............
+0x000060000133bff0:   63 73 65 64 00 00 00 00 00 00 00 00 00 00 00 00   csed............
+0x000060000133c000:   06 00 00 00 00 00 00 00 00 00 4b 0d 10 00 9e e9   ..........K.....
+0x000060000133c010:   67 72 6f 75 70 00 e8 8e 00 00 00 00 00 00 00 00   group...........
+0x000060000133c020:   08 00 00 00 00 00 00 00 00 00 67 0d 04 00 9e e9   ..........g.....
+0x000060000133c030:   1f 31 00 00 00 00 00 00 e8 8e 00 00 00 00 00 00   .1..............
+;;;";"2025-07-28 17:58;kvn;Should we run RunThese30M with UBSAN?;;;";"2025-07-30 01:21;jsjolen;[~kvn], isn't RunThese30M a very long running ""kitchen sink"" type of test? I think that UBSAN might make it take far too long. The best way to solve this is to get a hold of a x64 Mac to look at the corefile, but I also think that's not feasible to do. At least, it's not feasible for me.;;;";"2025-07-31 01:37;jsjolen;[~kvn], do you mean because  0x000060000133bfd0 cannot be blob_end() it cannot be a double-free, but a  stomp?;;;";"2025-07-31 17:22;kvn;[~jsjolen] Yes, I think so. If it was freed it will be set to `blob_end()` address which is inside CodeCache address space:
+
+CodeHeap 'non-profiled nmethods': size=120032Kb used=29796Kb max_used=29796Kb free=90235Kb
+ bounds [0x000000011e7c8000, 0x00000001204e8000, 0x0000000125d00000]
+
+On other hand, MacOs seems use (based on hs_err file) high addresses `0x000060000*` for malloc. So `_mutable_data` still points to that space.;;;";"2025-12-09 20:43;dholmes;Re-opening as there was another occurrence of this on November 11, but was linked to the wrong issue.
+
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (mallocHeader.inline.hpp:107), pid=97096, tid=17411
+#  fatal error: NMT has detected a memory corruption bug. Block at 0x0000600003b3bff0: header canary broken
+#
+# JRE version: Java(TM) SE Runtime Environment (26.0+24) (build 26-ea+24-2390)
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (26-ea+24-2390, mixed mode, tiered, compressed oops, compressed class ptrs, parallel gc, bsd-aarch64)
+# Core dump will be written. Default location: core.97096
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Xbootclasspath/a:/System/Volumes/Data/mesos/work_dir/slaves/da1065b5-7b94-4f0d-85e9-a3a252b9a32e-S404/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/1941773f-4404-4697-bda9-ec2dea4d892b/runs/ae15f8e8-cf3f-4d38-899e-9f46e5c8e3f1/testoutput/test-support/jtreg_closed_test_hotspot_jtreg_applications_runthese_RunThese8H_java/scratch/0/wb.jar -XX:+UnlockDiagnosticVMOptions -XX:+WhiteBoxAPI -XX:MaxRAMPercentage=6.25 -Dtest.boot.jdk=/System/Volumes/Data/mesos/work_dir/jib-master/install/jdk/25/37/bundles/macos-aarch64/jdk-25_macos-aarch64_bin.tar.gz/jdk-25.jdk/Contents/Home -Djava.io.tmpdir=/System/Volumes/Data/mesos/work_dir/slaves/da1065b5-7b94-4f0d-85e9-a3a252b9a32e-S404/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/1941773f-4404-4697-bda9-ec2dea4d892b/runs/ae15f8e8-cf3f-4d38-899e-9f46e5c8e3f1/testoutput/test-support/jtreg_closed_test_hotspot_jtreg_applications_runthese_RunThese8H_java/tmp -XX:+UseParallelGC -XX:MaxRAMPercentage=50 -Djava.net.preferIPv6Addresses=false -XX:+DisplayVMOutputToStderr -Xlog:gc*,gc+heap=debug:gc.log:uptime,timemillis,level,tags -XX:+DisableExplicitGC -XX:+StartAttachListener -XX:CompileCommand=memlimit,*.*,0 -Xlog:monitorinflation=info:file=../monitorinflation.log::filesize=500m -Djava.io.tmpdir=/System/Volumes/Data/mesos/work_dir/slaves/da1065b5-7b94-4f0d-85e9-a3a252b9a32e-S404/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/1941773f-4404-4697-bda9-ec2dea4d892b/runs/ae15f8e8-cf3f-4d38-899e-9f46e5c8e3f1/testoutput/test-support/jtreg_closed_test_hotspot_jtreg_applications_runthese_RunThese8H_java/scratch/0/java.io.tmpdir -Duser.home=/System/Volumes/Data/mesos/work_dir/slaves/da1065b5-7b94-4f0d-85e9-a3a252b9a32e-S404/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/1941773f-4404-4697-bda9-ec2dea4d892b/runs/ae15f8e8-cf3f-4d38-899e-9f46e5c8e3f1/testoutput/test-support/jtreg_closed_test_hotspot_jtreg_applications_runthese_RunThese8H_java/scratch/0/user.home -agentpath:/System/Volumes/Data/mesos/work_dir/jib-master/install/jdk-26+24-2390/macosx-aarch64.test/hotspot/jtreg/native/libJvmtiStressModule.dylib -Xverify:all -javaagent:redefineagent.jar -XX:NativeMemoryTracking=detail -Djdk.test.lib.random.seed=2527816157 applications.kitchensink.process.stress.Main /System/Volumes/Data/mesos/work_dir/slaves/da1065b5-7b94-4f0d-85e9-a3a252b9a32e-S404/frameworks/1735e8a2-a1db-478c-8104-60c8b0af87dd-0196/executors/1941773f-4404-4697-bda9-ec2dea4d892b/runs/ae15f8e8-cf3f-4d38-899e-9f46e5c8e3f1/testoutput/test-support/jtreg_closed_test_hotspot_jtreg_applications_runthese_RunThese8H_java/scratch/0/kitchensink.final.properties
+
+Host: ""Macmini9,1"" arm64, 8 cores, 16G, Darwin 23.6.0, macOS 14.8 (23J21)
+Time: Tue Nov 11 07:39:08 2025 PST elapsed time: 16013.971411 seconds (0d 4h 26m 53s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x000000012004c210):  VMThread ""VM Thread""          [id=17411, stack(0x000000016bf9c000,0x000000016c19f000) (2060K)]
+
+Stack: [0x000000016bf9c000,0x000000016c19f000],  sp=0x000000016c19dc80,  free space=2055k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [libjvm.dylib+0xabdf20]  VMError::report(outputStream*, bool)+0x97c  (mallocHeader.inline.hpp:107)
+V  [libjvm.dylib+0xac1a6c]  VMError::report_and_die(int, char const*, char const*, char*, Thread*, unsigned char*, void const*, void const*, char const*, int, unsigned long)+0x518
+V  [libjvm.dylib+0x31b81c]  DebuggingContext::~DebuggingContext()+0x0
+V  [libjvm.dylib+0x7f4630]  MallocHeader* MallocHeader::resolve_checked_impl<void*, MallocHeader*>(void*)+0x17c
+V  [libjvm.dylib+0x7f40fc]  MallocTracker::record_free_block(void*)+0x10
+V  [libjvm.dylib+0x89bf64]  os::free(void*)+0xfc
+V  [libjvm.dylib+0x29f810]  CodeBlob::purge()+0x48
+V  [libjvm.dylib+0x86cd94]  nmethod::purge(bool)+0x338
+V  [libjvm.dylib+0x295028]  ClassUnloadingContext::purge_nmethods()+0x68
+V  [libjvm.dylib+0x8f982c]  PSParallelCompact::marking_phase(ParallelOldTracer*)+0xb34
+V  [libjvm.dylib+0x8f8a84]  PSParallelCompact::invoke(bool, bool)+0x2ac
+V  [libjvm.dylib+0x90dc74]  VM_ParallelGCCollect::doit()+0x3c
+V  [libjvm.dylib+0xac8cd8]  VM_Operation::evaluate()+0xec
+V  [libjvm.dylib+0xacf388]  VMThread::evaluate_operation(VM_Operation*)+0xe8
+V  [libjvm.dylib+0xacfad8]  VMThread::inner_execute(VM_Operation*)+0x29c
+V  [libjvm.dylib+0xacf048]  VMThread::run()+0xd0
+V  [libjvm.dylib+0xa41248]  Thread::call_run()+0xc8
+V  [libjvm.dylib+0x8a1950]  thread_native_entry(Thread*)+0x118
+C  [libsystem_pthread.dylib+0x6f3c]  _pthread_start+0x88
+VM_Operation (0x0000000372c344c0): ParallelGCCollect, mode: safepoint, requested by thread 0x000000012f9cc810
+;;;";"2026-01-28 11:03;epavlova;[~jsjolen] you are right, the issue is actually because the test was not run with debug symbols. See https://bugs.openjdk.org/browse/JDK-8376524. ;;;";;;;;;;;;;
+Should set flagThisUninit whenever uninitializedThis is on the stack;JDK-8375483;5180417;Bug;Open;JDK;JDK;software;duke;;;P3;;matsaave;dlsmith;dlsmith;2026-01-15 18:45;2026-01-27 10:44;2026-02-09 16:43;;26;;27;hotspot;;0;lw401;verifier;;;;"Per JDK-8375481, implement the verification spec change that sets flagThisUninit whenever an uninitializedThis type is listed in the OperandStack of a StackMapTable entry.";;;;;;;;;;;;;;JDK-8376522;;JDK-8375481;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3er4j:";9223372036854775807;;;runtime;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+applications/runthese/RunThese30M.java fails with jtreg timeout;JDK-8371745;5175746;Bug;Open;JDK;JDK;software;duke;;;P3;;;msheppar;msheppar;2025-11-12 13:53;2025-12-08 09:17;2026-02-09 16:43;;26;;27;hotspot;;0;tier3;;;;;"'
+command: driver applications.kitchensink.process.glue.Main runthese.properties
+reason: User specified action: run driver/timeout=7200 applications.kitchensink.process.glue.Main runthese.properties 
+exclusiveAccess wait time (seconds): 0.0
+started: Wed Nov 12 18:19:15.098 GMT 2025
+Mode: othervm [test requires --enable-preview]
+Process id: 13213
+Timeout information:
+[20:19:14.942] starting timeout handler action(s)
+[20:30:22.933] timeout handler action(s) completed
+--- Timeout information end.
+finished: Wed Nov 12 20:30:22.940 GMT 2025
+elapsed time (seconds): 7867.842
+
+
+test result: Error. '/System/Volumes/Data/mesos/work_dir/jib-master/install/jdk-26+24-2451/macosx-aarch64-debug.jdk/jdk-26/fastdebug/bin/java' timed out after 7200000 ms (elapsed time including timeout handling 7867837 ms); but completed after timeout - suppressed status: ""Failed. Unexpected exit from test [exit code: 134]""
+";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;aarch64;;;;;;;;os_x;;;;;;;;;;;;"0|i3e0yz:";9223372036854775807;;;runtime;;;;;;;"2025-11-18 09:01;mwthomps;ILW=HLM=P3;;;";;;;;;;;;;;;;;;;;;;;;;
+Cannot change key length in PBMAC1;JDK-8366979;5170064;Bug;Open;JDK;JDK;software;duke;;;P3;;mpowers;weijun;weijun;2025-09-05 06:54;2025-12-16 05:59;2026-02-09 16:43;;26;;27;security-libs;;0;;;;;;"https://datatracker.ietf.org/doc/html/rfc8018#section-7.1.1 describes the parameters for PBMAC1 including S (salt), c (iteration counts, or ic), and dkLen (key length). However, in the Java implementation in PBMAC1Core.java, key length is hardcoded to block length of the message digest algorithm and the user cannot change it. See https://github.com/openjdk/jdk/blob/1472124489c841642996ae984e21c533ffec8091/src/java.base/share/classes/com/sun/crypto/provider/PBMAC1Core.java#L176.
+
+In order to specify a different key length, users have to derive the key first with
+
+        var skf = SecretKeyFactory.getInstance(""PBKDF2WithHmacSHA256"");
+        var pbeKey = skf.generateSecret(new PBEKeySpec(passwd, salt, ic, dkLen));
+
+But then, this key cannot be used in a PBEWithHmacSHA256 Mac because only the password/salt/ic inside will be used and the generated key is actually abandoned and key length is forgotten! See https://github.com/openjdk/jdk/blob/1472124489c841642996ae984e21c533ffec8091/src/java.base/share/classes/com/sun/crypto/provider/PBMAC1Core.java#L110-L115.
+
+        var m = Mac.getInstance(""PBEWithHmacSHA256"");
+        m.init(pbeKey); // dkLen is forgotten, 64 is used
+
+The correct way is to use the derived key in a raw (!) Mac, like this:
+
+        var m2 = Mac.getInstance(""HmacSHA256"");
+        m2.init(pbeKey); // pbeKey.getEncoded() is used, which has dkLen bits
+
+This makes the PBE Mac useless when an arbitrary key length is needed. For example, in https://datatracker.ietf.org/doc/html/rfc9579#name-recommended-parameters:
+
+    The length of the key generated by the used KDF MUST be encoded explicitly in the parameters field and SHOULD be the same size as the HMAC function output size.
+
+We should either enhance the PBE Mac to accept a password (as a SecretKey) directly with salt/ic/key length configurable. Or, after the PBKDF2 SecretKeyFactory generates the key it can be used in the PBC Mac without losing the key length info.
+
+Another option is to deprecate the PBEWithHmacSHA256 algorithm itself and make PBKDF2 SecretKeyFactory + HmacSHA256 Mac combination the formal way.";;;;;;;;;;;;;;;;;;;;;;;JDK-8343232;;;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3d3hn:";9223372036854775807;;;javax.crypto;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+tools/javac/cast/intersection/IntersectionTypeCastTest.java timed out after completion;JDK-8369720;5173173;Bug;Open;JDK;JDK;software;duke;;;P3;;cstein;dcubed;dcubed;2025-10-13 10:16;2025-11-17 11:08;2026-02-09 16:43;;26;;tbd;tools;;0;intermittent;tier1;;;;"The following test timed out in the JDK26 CI:
+
+tools/javac/cast/intersection/IntersectionTypeCastTest.java
+
+Here's a snippet from the log file:
+
+#section:main
+----------messages:(12/510)----------
+command: main IntersectionTypeCastTest
+reason: User specified action: run main IntersectionTypeCastTest 
+started: Mon Oct 13 12:04:24 GMT 2025
+Mode: agentvm
+Agent id: 7
+Process id: 42331
+Additional exports to unnamed modules from @modules: jdk.compiler/com.sun.tools.javac.api jdk.compiler/com.sun.tools.javac.file jdk.compiler/com.sun.tools.javac.util
+Timeout signalled after 120 seconds
+Timeout information:
+--- Timeout information end.
+finished: Mon Oct 13 12:14:20 GMT 2025
+elapsed time (seconds): 596.164
+----------configuration:(17/2239)----------
+
+<snip>
+
+----------System.err:(12/223)----------
+165888 total checks executed
+22898 successes found
+0 failures found
+0 errors found
+142990 skips found
+22897 reused Contexts
+1 newly created Contexts
+0 polluted Contexts
+0 removed Contexts
+
+JavaTest Message: Test complete.
+
+result: Error. ""main"" action timed out with a timeout of 120 seconds on agent 7
+
+Since this is a Tier1 failure, that would normally start out as a P2.
+However, the time out is intermittent so I'm starting this out as a P3.";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;aarch64;;;;;;;;os_x;;;;;;;;;;;;"0|i3dmgr:";9223372036854775807;;;javac;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Downgrade cant.attach.type.annotations diagnostics to warnings;JDK-8370800;5174482;Bug;Open;JDK;JDK;software;duke;;;P3;;cushon;cushon;cushon;2025-10-28 04:01;2025-11-24 08:27;2026-02-09 16:43;;26;;27;tools;;0;type-annotations;;;;;"As discussed in JDK-8346471, a compatibility impact of javac reading type annotations from the classpath is that it may load additional class files referenced by type annotations. This can cause compilation errors for compilations with incomplete classpaths, but which previously compiled because the missing classes were never loaded.
+
+JDK-8337998 added handling for these completion failures, and introduced a new error diagnostic cant.attach.type.annotations.
+
+There have been some reports of these cant.attach.type.annotations diagnostics where transitive dependencies were deliberately being excluded from classpaths, for example:
+
+* https://github.com/spring-projects/spring-data-build/issues/2579
+* https://github.com/spring-projects/spring-framework/commit/79795c8e092e74102d45a8455d4948aa77ee7608
+
+These diagnostics have some similarities to other diagnostics for incomplete or inconsistent information in class files:
+
+* unknown.enum.constant is a warning
+* annotation.method.not.found is a lint 'classfile' warning
+
+To reduce the compatibility impact of the cant.attach.type.annotations diagnostics, it may be worth considering downgrading them to warnings, or potentially xlint warnings (as part of 'classfile', or potentially a different xlint category).";;;;;;;;;;;;;;;;JDK-8337998;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;"0|i3dtzv:";9223372036854775807;;;javac;;;;;;;"2025-10-28 04:54;roboduke;A pull request was submitted for review.
+Branch: master
+URL: https://git.openjdk.org/jdk/pull/28018
+Date: 2025-10-28 11:41:01 +0000;;;";"2025-10-31 06:19;cushon;To explore the handling between missing non-type-use and type-use annotations a bit, consider the following example:
+
+```
+$ javac *.java; javac -processor P T.java -sourcepath :
+...
+Note: LA [@A]
+Note: @A DECLARED
+Note: f() [@TA]
+Note: @TA DECLARED
+```
+
+When using a class file that references missing annotation classes, missing type-use or non-type-use annotations does not result in an javac error, and are included in the model as ERROR types:
+
+```
+$ javac *.java; rm A.class TA.class; javac -processor P T.java -sourcepath :
+Note: LA [@A]
+Note: @A ERROR
+Note: f() [@TA]
+Note: @TA ERROR
+```
+
+Missing transitive classes that are referenced in the API result in a `cant.attach.type.annotations` diagnostic:
+
+```
+$ javac *.java; rm Lib.class; javac -processor P T.java -sourcepath :
+./LTA.class: error: Cannot attach type annotations @TA to LTA.f:
+  class file for Lib not found
+1 error
+```
+
+One earlier javac versions without cant.attach.type.annotations, cant.access / class.file.not.found would have been reported if the code actually transitively referenced the missing class, e.g.:
+
+```
+  void f(LTA lta) {
+    lta.f();
+  }
+...
+T.java:6: error: cannot access Lib
+    lta.f();
+         ^
+```
+
+so in practice here javac is more eagerly completing symbols that are referenced in the API of any libraries referenced by the current compilation, if those APIs have type annotations.
+
+=== A.java ===
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@interface A {}
+=== LA.java ===
+@A
+public class LA {}
+=== Lib.java ===
+class Lib<T> {}
+=== LTA.java ===
+class LTA {
+  public Lib<@TA Object> f() {
+    return null;
+  }
+}
+=== T.java ===
+class T {
+  LA la;
+  LTA lta;
+}
+=== TA.java ===
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE_USE)
+@Retention(RetentionPolicy.RUNTIME)
+@interface TA {}
+=== P.java
+import java.util.Set;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
+
+@SupportedAnnotationTypes(""*"")
+public class P extends AbstractProcessor {
+  @Override
+  public SourceVersion getSupportedSourceVersion() {
+    return SourceVersion.latestSupported();
+  }
+
+  boolean first = true;
+
+  @Override
+  public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    if (!first) {
+      return false;
+    }
+    Element t = processingEnv.getElementUtils().getTypeElement(""LA"");
+    processingEnv
+        .getMessager()
+        .printMessage(Diagnostic.Kind.NOTE, ""%s [%s]"".formatted(t, t.getAnnotationMirrors()));
+    for (var anno : t.getAnnotationMirrors()) {
+      processingEnv
+          .getMessager()
+          .printMessage(
+              Diagnostic.Kind.NOTE, ""%s %s"".formatted(anno, anno.getAnnotationType().getKind()));
+    }
+    t = processingEnv.getElementUtils().getTypeElement(""LTA"");
+    ExecutableElement f =
+        (ExecutableElement)
+            t.getEnclosedElements().stream()
+                .filter(e -> e.getSimpleName().contentEquals(""f""))
+                .findAny()
+                .get();
+    TypeMirror ft = ((DeclaredType) f.getReturnType()).getTypeArguments().get(0);
+    processingEnv
+        .getMessager()
+        .printMessage(Diagnostic.Kind.NOTE, ""%s [%s]"".formatted(f, ft.getAnnotationMirrors()));
+    for (var anno : ft.getAnnotationMirrors()) {
+      processingEnv
+          .getMessager()
+          .printMessage(
+              Diagnostic.Kind.NOTE, ""%s %s"".formatted(anno, anno.getAnnotationType().getKind()));
+    }
+    first = false;
+    return false;
+  }
+}
+===
+;;;";;;;;;;;;;;;;;;;;;;;;
+jdk/jshell/StartOptionTest.java test StartOptionTest.testPreviewEnabled failed;JDK-8364301;5167019;Bug;Open;JDK;JDK;software;duke;;;P3;;;dcubed;dcubed;2025-07-29 09:31;2025-09-22 07:45;2026-02-09 16:43;;26;;tbd;tools;;0;intermittent;tier1;;;;"The following test failed in the JDK26 CI:
+
+jdk/jshell/StartOptionTest.java
+
+Here's a snippet from the log file:
+
+#section:testng
+----------messages:(8/959)----------
+command: testng --patch-module jdk.jshell=/System/Volumes/Data/mesos/work_dir/jib-master/install/jdk-26+9-887/src.full/open/test/langtools/jdk/jshell/StartOptionTest-module-patch StartOptionTest
+reason: User specified action: run testng/othervm --patch-module jdk.jshell=${test.src}/StartOptionTest-module-patch StartOptionTest 
+started: Tue Jul 29 13:56:21 GMT 2025
+Mode: othervm [/othervm specified]
+Additional options from @modules: --add-modules jdk.compiler,jdk.jdeps,jdk.jshell --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED --add-exports jdk.jdeps/com.sun.tools.javap=ALL-UNNAMED --add-exports jdk.jshell/jdk.internal.jshell.tool=ALL-UNNAMED --add-exports jdk.jshell/jdk.internal.jshell.tool.resources=ALL-UNNAMED --add-opens jdk.jshell/jdk.internal.jshell.tool.resources=ALL-UNNAMED
+Process id: 46127
+finished: Tue Jul 29 13:56:56 GMT 2025
+elapsed time (seconds): 35.637
+----------configuration:(10/710)----------
+
+<snip>
+
+----------System.out:(105/5689)----------
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testClasspath(): success [50ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testCommandFile(): success [857ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testErroneousFile(): success [731ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testExitCode(): success [1083ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testFeedbackOptionConflict(): success [10ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testHelpExtra(): success [3ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testHypenFile(): success [1963ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testInput(): success [1107ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testNegFeedbackOption(): success [469ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test
+test StartOptionTest.testPreviewEnabled(): failure [27342ms]
+java.lang.AssertionError: expected [test
+] but found []
+	at org.testng.Assert.fail(Assert.java:99)
+	at org.testng.Assert.failNotEquals(Assert.java:1037)
+	at org.testng.Assert.assertEqualsImpl(Assert.java:140)
+	at org.testng.Assert.assertEquals(Assert.java:122)
+	at org.testng.Assert.assertEquals(Assert.java:629)
+	at org.testng.Assert.assertEquals(Assert.java:639)
+	at StartOptionTest.lambda$testPreviewEnabled$3(StartOptionTest.java:444)
+	at StartOptionTest.check(StartOptionTest.java:117)
+	at StartOptionTest.startCheckUserOutput(StartOptionTest.java:166)
+	at StartOptionTest.testPreviewEnabled(StartOptionTest.java:444)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.testng.internal.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:132)
+	at org.testng.internal.TestInvoker.invokeMethod(TestInvoker.java:599)
+	at org.testng.internal.TestInvoker.invokeTestMethod(TestInvoker.java:174)
+	at org.testng.internal.MethodRunner.runInSequence(MethodRunner.java:46)
+	at org.testng.internal.TestInvoker$MethodInvocationAgent.invoke(TestInvoker.java:822)
+	at org.testng.internal.TestInvoker.invokeTestMethods(TestInvoker.java:147)
+	at org.testng.internal.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:146)
+	at org.testng.internal.TestMethodWorker.run(TestMethodWorker.java:128)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.testng.TestRunner.privateRun(TestRunner.java:764)
+	at org.testng.TestRunner.run(TestRunner.java:585)
+	at org.testng.SuiteRunner.runTest(SuiteRunner.java:384)
+	at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:378)
+	at org.testng.SuiteRunner.privateRun(SuiteRunner.java:337)
+	at org.testng.SuiteRunner.run(SuiteRunner.java:286)
+	at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:53)
+	at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:96)
+	at org.testng.TestNG.runSuitesSequentially(TestNG.java:1218)
+	at org.testng.TestNG.runSuitesLocally(TestNG.java:1140)
+	at org.testng.TestNG.runSuites(TestNG.java:1069)
+	at org.testng.TestNG.run(TestNG.java:1037)
+	at com.sun.javatest.regtest.agent.TestNGRunner.main(TestNGRunner.java:107)
+	at com.sun.javatest.regtest.agent.TestNGRunner.main(TestNGRunner.java:63)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javatest.regtest.agent.MainWrapper$MainTask.run(MainWrapper.java:138)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testShowVersion(): success [497ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testStartup(): success [1ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testStartupFailedOption(): success [418ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testStartupUnknown(): success [1ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testUnknown(): success [0ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testUnknownLoadFile(): success [249ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testUnknownModule(): success [289ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testUsage(): success [0ms]
+config StartOptionTest.tearDown(): success [0ms]
+config StartOptionTest.setUp(): success [0ms]
+test StartOptionTest.testVersion(): success [0ms]
+config StartOptionTest.tearDown(): success [0ms]
+
+===============================================
+jdk/jshell/StartOptionTest.java
+Total tests run: 19, Passes: 18, Failures: 1, Skips: 0
+===============================================
+
+----------System.err:(58/6847)----------
+
+This is a Tier1 failure so I would normally start this issue as a P2,
+but the failure did not reproduce in the next build-ID. I've added
+the intermittent label and started this issue as a P3.";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;aarch64;;;;;;;;os_x;;;;;;;;;;;;"0|i3cl17:";9223372036854775807;;;jshell;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+jdk/jshell/ToolShiftTabTest.java failed with Timeout waiting for: ==> 1;JDK-8365527;5168363;Bug;Open;JDK;JDK;software;duke;;;P3;;;dcubed;dcubed;2025-08-13 21:12;2025-12-03 07:36;2026-02-09 16:43;;26;;27;tools;;0;intermittent;tier1;;;;"The following test failed in the JDK26 CI:
+
+jdk/jshell/ToolShiftTabTest.java
+
+Here's a snippet from the log file:
+
+#section:testng
+----------messages:(9/422)----------
+command: testng ToolShiftTabTest
+reason: User specified action: run testng/timeout=300 ToolShiftTabTest 
+started: Wed Aug 13 23:34:28 UTC 2025
+Mode: agentvm
+Agent id: 10
+Process id: 3216
+Additional opens to unnamed modules from @modules: jdk.jshell/jdk.internal.jshell.tool jdk.jshell/jdk.internal.jshell.tool.resources jdk.jshell/jdk.jshell
+finished: Wed Aug 13 23:38:32 UTC 2025
+elapsed time (seconds): 244.155
+----------configuration:(15/1353)*----------
+
+<snip>
+
+----------System.out:(138/6111)*----------
+|  Welcome to JShell -- Version 26-ea
+|  For an introduction type: /help intro
+\u001b[?2004h \u0005123\u0007
+Unexpected character after Shift+Tab.
+Use ""i"" for auto-import, ""v"" for variable creation, or ""m"" for method creation.
+For more information see:
+/help shortcuts
+
+ \u0005123
+\u001b[?2004l\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005/exit
+\u001b[?2004l|  Goodbye
+test ToolShiftTabTest.testFixBad(): success [466ms]
+|  Welcome to JShell -- Version 26-ea
+|  For an introduction type: /help intro
+\u001b[?2004h \u0005Frame
+Results may be incomplete; try again later for complete results.
+
+0: Do nothing
+1: import: java.awt.Frame
+Choice: \u0007
+
+ \u0005Frame[Zi1.WIDTH
+ \u0006
+\u001b[?2004l\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005/exit
+\u001b[?2004l|  Goodbye
+test ToolShiftTabTest.testFixImport(): failure [241781ms]
+java.lang.IllegalStateException: Timeout waiting for: ==> 1, actual output so far: \\u000D\\u000AChoice: \\u0007\\u000D\\u000A\\u000D \\u0005Frame[Zi1.WIDTH\\u000D\\u000A \\u0006
+	at UITesting.waitOutput(UITesting.java:193)
+	at UITesting.waitOutput(UITesting.java:162)
+	at ToolShiftTabTest.lambda$testFixImport$0(ToolShiftTabTest.java:119)
+	at UITesting.doRunTest(UITesting.java:136)
+	at UITesting.doRunTest(UITesting.java:67)
+	at ToolShiftTabTest.testFixImport(ToolShiftTabTest.java:110)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at org.testng.internal.MethodInvocationHelper.invokeMethod(MethodInvocationHelper.java:132)
+	at org.testng.internal.TestInvoker.invokeMethod(TestInvoker.java:599)
+	at org.testng.internal.TestInvoker.invokeTestMethod(TestInvoker.java:174)
+	at org.testng.internal.MethodRunner.runInSequence(MethodRunner.java:46)
+	at org.testng.internal.TestInvoker$MethodInvocationAgent.invoke(TestInvoker.java:822)
+	at org.testng.internal.TestInvoker.invokeTestMethods(TestInvoker.java:147)
+	at org.testng.internal.TestMethodWorker.invokeTestMethods(TestMethodWorker.java:146)
+	at org.testng.internal.TestMethodWorker.run(TestMethodWorker.java:128)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1604)
+	at org.testng.TestRunner.privateRun(TestRunner.java:764)
+	at org.testng.TestRunner.run(TestRunner.java:585)
+	at org.testng.SuiteRunner.runTest(SuiteRunner.java:384)
+	at org.testng.SuiteRunner.runSequentially(SuiteRunner.java:378)
+	at org.testng.SuiteRunner.privateRun(SuiteRunner.java:337)
+	at org.testng.SuiteRunner.run(SuiteRunner.java:286)
+	at org.testng.SuiteRunnerWorker.runSuite(SuiteRunnerWorker.java:53)
+	at org.testng.SuiteRunnerWorker.run(SuiteRunnerWorker.java:96)
+	at org.testng.TestNG.runSuitesSequentially(TestNG.java:1218)
+	at org.testng.TestNG.runSuitesLocally(TestNG.java:1140)
+	at org.testng.TestNG.runSuites(TestNG.java:1069)
+	at org.testng.TestNG.run(TestNG.java:1037)
+	at com.sun.javatest.regtest.agent.TestNGRunner.main(TestNGRunner.java:107)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javatest.regtest.agent.MainActionHelper$AgentVMRunnable.run(MainActionHelper.java:335)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+|  Welcome to JShell -- Version 26-ea
+|  For an introduction type: /help intro
+\u001b[?2004h \u00055.5 >= 3.1415926535
+ \u0005boolean () { return 5.5 >= 3.1415926535; }\u001b[34D\u001b[1@m\u001b[1@m\u001b[34C
+\u001b[?2004l|  created method mm()
+\u001b[?2004h \u0005mm()\u001b[2D\u001b[2C
+\u001b[?2004l$2 ==> true
+\u001b[?2004h \u0005/method
+\u001b[?2004l|    boolean mm()
+\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005/exit
+\u001b[?2004l|  Goodbye
+test ToolShiftTabTest.testFixMethod(): success [561ms]
+|  Welcome to JShell -- Version 26-ea
+|  For an introduction type: /help intro
+\u001b[?2004h \u00054
+ \u0005int () { return 4; }\u001b[16D\u001b[16C
+\u001b[?2004l\u001b[?2004h \u0005 55
+ \u0005int () { return  55; }\u001b[18D\u001b[18C
+\u001b[?2004l\u001b[?2004h \u0005 55
+ \u0005int () { return  55; }\u001b[18D\u001b[18C
+\u001b[?2004l\u001b[?2004h \u0005 55
+ \u0005int () { return  55; }\u001b[18D\u001b[18C
+\u001b[?2004l\u001b[?2004h \u0005 55
+ \u0005int () { return  55; }\u001b[18D\u001b[18C
+\u001b[?2004l\u001b[?2004h \u0005'X'
+ \u0005char () { return 'X'; }\u001b[18D\u001b[1@n\u001b[1@l\u001b[18C
+\u001b[?2004l|  created method nl()
+\u001b[?2004h \u0005/list
+\u001b[?2004l
+   1 : char nl() { return 'X'; }
+\u001b[?2004h \u0005true
+\u001b[?2004l$2 ==> true
+\u001b[?2004h \u0005/list
+\u001b[?2004l
+   1 : char nl() { return 'X'; }
+   2 : true
+\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005/exit
+\u001b[?2004l|  Goodbye
+test ToolShiftTabTest.testFixMethodNoLeaks(): success [464ms]
+|  Welcome to JShell -- Version 26-ea
+|  For an introduction type: /help intro
+\u001b[?2004h \u0005System.out.println(""Testing"")\u001b[11D\u001b[11C
+ \u0005void () { System.out.println(""Testing""); }\u001b[37D\u001b[1@p\u001b[37C
+\u001b[?2004l|  created method p()
+\u001b[?2004h \u0005p()\u001b[2D\u001b[2C
+\u001b[?2004lTesting
+\u001b[?2004h \u0005/method
+\u001b[?2004l|    void p()
+\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005/exit
+\u001b[?2004l|  Goodbye
+test ToolShiftTabTest.testFixMethodVoid(): success [469ms]
+|  Welcome to JShell -- Version 26-ea
+|  For an introduction type: /help intro
+\u001b[?2004h \u00053+4
+ \u0005int  = 3+4\u001b[6D\u001b[1@j\u001b[1@j\u001b[6C
+\u001b[?2004ljj ==> 7
+\u001b[?2004h \u0005jj
+\u001b[?2004ljj ==> 7
+\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005
+\u001b[?2004l\u001b[?2004h \u0005/exit
+\u001b[?2004l|  Goodbye
+test ToolShiftTabTest.testFixVariable(): success [374ms]
+
+===============================================
+jdk/jshell/ToolShiftTabTest.java
+Total tests run: 6, Passes: 5, Failures: 1, Skips: 0
+===============================================
+
+----------System.err:(10/564)----------
+java.lang.Exception: config failures: 0, test failures: 1
+	at com.sun.javatest.regtest.agent.TestNGRunner.main(TestNGRunner.java:111)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:565)
+	at com.sun.javatest.regtest.agent.MainActionHelper$AgentVMRunnable.run(MainActionHelper.java:335)
+	at java.base/java.lang.Thread.run(Thread.java:1474)
+
+JavaTest Message: Test threw exception: java.lang.Exception
+JavaTest Message: shutting down test
+
+result: Failed. Execution failed: `main' threw exception: java.lang.Exception: config failures: 0, test failures: 1";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;x86_64;;;;;;;;windows;;;;;;;;;;;;"0|i3ctbn:";9223372036854775807;;;jshell;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
