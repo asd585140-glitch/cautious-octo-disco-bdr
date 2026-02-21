@@ -1,2 +1,2 @@
-# cautious-octo-disco-bdr
+تغديل الخطاء واظهار تنسيق حجم الكتابه بشكل واضح# cautious-octo-disco-bdr
 خطاء في تنسيق الكتابه اثنا التحويل
